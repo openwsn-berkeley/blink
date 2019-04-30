@@ -107,9 +107,10 @@ class BlinkLab(threading.Thread):
             self.mgr.dn_setACLEntry(
                 macAddress   = ALLMOTES[m],
                 joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'],
+                #joinKey      = [68, 85, 83, 84, 78, 69, 84, 87, 79, 82, 75, 83, 82, 79, 67, 75] # default key
             )
         
-        # reset the network (reset sytstem)
+        # reset the network (reset sytstem: type = 0, reset specific motes: type= 2)
         self.mgr.dn_reset(
             type       = 0,
             macAddress = [0x00]*8,
@@ -131,10 +132,12 @@ class BlinkLab(threading.Thread):
             # blink packets
             for p in range(10):
                 print 'send packet {0} of transaction {1}'.format(p,t)
-                self.tag.blink(
+                self.tag.dn_blink(
                     fIncludeDscvNbrs = 1,
                     payload          = [t,p],
                 )
+            # Reset blink mote after 10 packets
+            self.tag.dn_reset()
 
 #============================ main ============================================
 
@@ -145,5 +148,6 @@ def main():
 
 if __name__=="__main__":
     main()
+
 
 
