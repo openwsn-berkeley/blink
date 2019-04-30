@@ -116,7 +116,6 @@ class BlinkLab(threading.Thread):
             macAddress = [0x00]*8,
         )
         
-        time.sleep(30)
         # wait for network to form
         while True:
             
