@@ -1,7 +1,7 @@
 SmartMeshSDK
 ============
 TEST MR
-
+  
 Python SmartMesh SDK
 
 * [Documentation](https://dustcloud.atlassian.net/wiki/display/SMSDK)
