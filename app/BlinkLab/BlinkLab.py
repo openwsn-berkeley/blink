@@ -12,6 +12,7 @@ if __name__ == "__main__":
 #============================ imports =========================================
 
 import time
+import datetime
 import threading
 import json
 
@@ -21,8 +22,8 @@ from SmartMeshSDK.IpMgrConnectorMux     import IpMgrSubscribe
 
 #============================ defines =========================================
 
-SERIALPORT_MGR          = 'COM176'
-SERIALPORT_TAG          = 'COM180'
+SERIALPORT_MGR          = 'COM37'
+SERIALPORT_TAG          = 'COM41'
 ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 198, 161], 
     [0, 23, 13, 0, 0, 49, 193, 171], 
@@ -94,7 +95,14 @@ def printAndLog(msg_type, msg, firstline = False):
                     'msg'      : msg,
                 })+ '\n'
             )
-    
+'''
+@JMonuz: This is the code to filter all notifications coming from the tag and adding timestamp for them.
+
+if len(notifParams)>2: 
+            if notifParams [2] == TAG_EUI:
+                printAndLog('BLINKNOTIF', {'notifName': notifName, 'notifParams': notifParams,'RxTimestamp': '{}'.format(datetime.datetime.now())})
+'''
+
 def handle_mgr_notif(notifName, notifParams):
     try:
         printAndLog('MGNNOTIF', {'notifName': notifName, 'notifParams': notifParams})
@@ -133,74 +141,91 @@ class BlinkLab(threading.Thread):
     #======================== private ==========================================
     
     def runExperimentForSize(self,networksize):
-        # log
-        printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
-        
-        # configure the manager's ACL
-        mote_list = [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]
-        for m in mote_list:
-            
+        try:
             # log
-            printAndLog('MNGCMD', {'cmd': 'dn_setACLEntry'})
+            printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
             
-            # call 
-            self.mgr.dn_setACLEntry(
-                macAddress   = m,
-                joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'],
+            # configure the manager's ACL
+            mote_list = [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]
+            for m in mote_list:
                 
-            )
-        
-        # reset the network (reset sytstem: type = 0, reset specific motes: type= 2)
-        print 'self.mgr.dn_reset'
-        self.mgr.dn_reset(
-            type       = 0,
-            macAddress = [0x00]*8,
-        )
-        print 'self.mgr.disconnect()'
-        self.mgr.disconnect()
-        time.sleep(30)
-        print 'self.mgr.connect()'
-        self.mgr.connect({'port': SERIALPORT_MGR})
-        
-        self.mgrsub = IpMgrSubscribe.IpMgrSubscribe(self.mgr)
-        self.mgrsub.start()
-        self.mgrsub.subscribe(
-            notifTypes =    IpMgrSubscribe.IpMgrSubscribe.ALLNOTIF,
-            fun =           handle_mgr_notif,
-            isRlbl =        False,
-        )
-        
-        # wait for network to form
-        while True:
-            
-            res = self.mgr.dn_getNetworkInfo()
-            print 'size of network as parameter: {0}, res.numMotes={1}, {2}'.format(networksize,res.numMotes, res)
-            if res.numMotes==networksize:
-                break
-            time.sleep(1)
-        
-        # blink transactions
-        for t in range(1):
-            
-            # blink packets
-            for p in range(1):
-                print 'send packet {0} of transaction {1}'.format(p,t)
-                self.tag.dn_blink(
-                    fIncludeDscvNbrs = 1,
-                    payload          = [t,p],
+                # log
+                printAndLog('MNGCMD', {'cmd': 'dn_setACLEntry'})
+                
+                # call 
+                self.mgr.dn_setACLEntry(
+                    macAddress   = m,
+                    joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'],
+                    
                 )
-                time.sleep(5)
+            
+            # reset the network (reset sytstem: type = 0, reset specific motes: type= 2)
+            print 'self.mgr.dn_reset'
+            self.mgr.dn_reset(
+                type       = 0,
+                macAddress = [0x00]*8,
+            )
+            print 'self.mgr.disconnect()'
+            self.mgr.disconnect()
+            time.sleep(30)
+            print 'self.mgr.connect()'
+            self.mgr.connect({'port': SERIALPORT_MGR})
+            
+            self.mgrsub = IpMgrSubscribe.IpMgrSubscribe(self.mgr)
+            self.mgrsub.start()
+            self.mgrsub.subscribe(
+                notifTypes =    IpMgrSubscribe.IpMgrSubscribe.ALLNOTIF,
+                fun =           handle_mgr_notif,
+                isRlbl =        False,
+            )
+            
+            # wait for network to form
+            while True:
                 
-            # reset tag
-            print 'self.tag.dn_reset()'
-            self.tag.dn_reset()
+                res = self.mgr.dn_getNetworkInfo()
+                print 'size of network as parameter: {0}, res.numMotes={1}, {2}'.format(networksize,res.numMotes, res)
+                if res.numMotes==networksize:
+                    break
+                time.sleep(1)
+            
+            blinkPayLoad = [00,11,22,33]
+            # blink transactions
+            for t in range(1):
+                
+                # blink packets
+                for p in range(1):
+                    try:
+                        print 'sending packet {0} of transaction {1} payload {2}'.format(p,t,[t,p])
+                        self.tag.dn_blink(
+                            fIncludeDscvNbrs = 1,
+                            payload          = blinkPayLoad
+                            )
+                        printAndLog('BLINK','WILL SEND BLINK DATA {0}'.format(blinkPayLoad))
+                    except Exception as err:
+                        printAndLog ('ERROR',"Could not execute dn_blink: {0}\n".format(err))
 
+            self.tag.disconnect()
+            time.sleep(5)
+
+        except Exception as err:
+            output = []
+            output += ["Script ended with an error!"]
+            output += [""]
+            output += ["======== exception ==========="]
+            output += [""]
+            output += [str(err)]
+            output += [""]
+            output += ["=============================="]
+            output += [""]
+            output  = '\n'.join(output)
+            print output
 #============================ main ============================================
 
 def main():
     blinklab = BlinkLab()
     blinklab.join()
     raw_input("Script ended successfully. Press Enter to close.")
+	
 
 if __name__=="__main__":
     main()
