@@ -34,52 +34,39 @@ SERIALPORT_MGR          = 'COM7'
 SERIALPORT_MGR_2        = 'COM15'
 SERIALPORT_TAG          = 'COM11'
 ALLMOTES                = [
-    [0, 23, 13, 0, 0, 49, 198, 161], 
-    [0, 23, 13, 0, 0, 49, 193, 171], 
-    [0, 23, 13, 0, 0, 49, 204, 15], 
-    [0, 23, 13, 0, 0, 49, 195, 71], 
-    [0, 23, 13, 0, 0, 49, 213, 59], 
-    [0, 23, 13, 0, 0, 49, 201, 230], 
-    [0, 23, 13, 0, 0, 49, 202, 3], 
-    [0, 23, 13, 0, 0, 49, 209, 95], 
-    [0, 23, 13, 0, 0, 49, 213, 103], 
-    [0, 23, 13, 0, 0, 49, 213, 106], 
-    [0, 23, 13, 0, 0, 49, 213, 48], 
-    [0, 23, 13, 0, 0, 49, 202, 5], 
-    [0, 23, 13, 0, 0, 49, 204, 46], 
-    [0, 23, 13, 0, 0, 49, 193, 161], 
-    [0, 23, 13, 0, 0, 49, 209, 112], 
-    [0, 23, 13, 0, 0, 49, 213, 1], 
-    [0, 23, 13, 0, 0, 49, 204, 64], 
-    [0, 23, 13, 0, 0, 49, 199, 176], 
-    [0, 23, 13, 0, 0, 49, 201, 241], 
-    [0, 23, 13, 0, 0, 49, 213, 32], 
-    [0, 23, 13, 0, 0, 49, 209, 172], 
-    [0, 23, 13, 0, 0, 49, 198, 184], 
-    [0, 23, 13, 0, 0, 49, 195, 55], 
-    [0, 23, 13, 0, 0, 49, 194, 249], 
-    [0, 23, 13, 0, 0, 49, 204, 88], 
-    [0, 23, 13, 0, 0, 49, 195, 83], 
-    [0, 23, 13, 0, 0, 49, 203, 229], 
-    [0, 23, 13, 0, 0, 49, 209, 50], 
-    [0, 23, 13, 0, 0, 49, 193, 160], 
-    [0, 23, 13, 0, 0, 49, 212, 126], 
-    [0, 23, 13, 0, 0, 49, 195, 113], 
-    [0, 23, 13, 0, 0, 49, 209, 211], 
-    [0, 23, 13, 0, 0, 49, 193, 193], 
-    [0, 23, 13, 0, 0, 49, 195, 62], 
-    [0, 23, 13, 0, 0, 49, 213, 31], 
-    [0, 23, 13, 0, 0, 49, 209, 168], 
-    [0, 23, 13, 0, 0, 49, 195, 25], 
-    [0, 23, 13, 0, 0, 49, 199, 222], 
-    [0, 23, 13, 0, 0, 49, 203, 231], 
-    [0, 23, 13, 0, 0, 49, 204, 89], 
-    [0, 23, 13, 0, 0, 49, 198, 146], 
-    [0, 23, 13, 0, 0, 49, 213, 105], 
-    [0, 23, 13, 0, 0, 49, 199, 219], 
-    [0, 23, 13, 0, 0, 49, 213, 134], 
-    [0, 23, 13, 0, 0, 49, 213, 50], 
-    [0, 23, 13, 0, 0, 49, 195, 10],
+    [0, 23, 13, 0, 0, 49, 194, 249] ,
+[0, 23, 13, 0, 0, 49, 195, 83]  ,
+[0, 23, 13, 0, 0, 49, 209, 172] ,
+[0, 23, 13, 0, 0, 49, 213, 32]  ,
+[0, 23, 13, 0, 0, 49, 199, 222] ,
+[0, 23, 13, 0, 0, 49, 202, 3]   ,
+[0, 23, 13, 0, 0, 49, 201, 230] ,
+[0, 23, 13, 0, 0, 49, 198, 184] ,
+[0, 23, 13, 0, 0, 49, 193, 160] ,
+[0, 23, 13, 0, 0, 49, 195, 71]  ,
+[0, 23, 13, 0, 0, 49, 193, 193] ,
+[0, 23, 13, 0, 0, 49, 213, 106] ,
+[0, 23, 13, 0, 0, 49, 198, 146] ,
+[0, 23, 13, 0, 0, 49, 213, 31]  ,
+[0, 23, 13, 0, 0, 49, 213, 1]   ,
+[0, 23, 13, 0, 0, 49, 195, 10]  ,
+[0, 23, 13, 0, 0, 49, 193, 161] ,
+[0, 23, 13, 0, 0, 49, 204, 64]  ,
+[0, 23, 13, 0, 0, 49, 209, 168] ,
+[0, 23, 13, 0, 0, 49, 213, 59]  ,
+[0, 23, 13, 0, 0, 49, 199, 219] ,
+[0, 23, 13, 0, 0, 49, 195, 25]  ,
+[0, 23, 13, 0, 0, 49, 204, 88]  ,
+[0, 23, 13, 0, 0, 49, 195, 55]  ,
+[0, 23, 13, 0, 0, 49, 204, 15]  ,
+[0, 23, 13, 0, 0, 49, 195, 62]  ,
+[0, 23, 13, 0, 0, 49, 213, 105] ,
+[0, 23, 13, 0, 0, 49, 193, 171] ,
+[0, 23, 13, 0, 0, 49, 202, 5]   ,
+[0, 23, 13, 0, 0, 49, 213, 48]  ,
+[0, 23, 13, 0, 0, 49, 203, 229] ,
+[0, 23, 13, 0, 0, 49, 198, 161] ,
+[0, 23, 13, 0, 0, 49, 201, 218] ,
 ]
 
 TAG_EUI = [0, 23, 13, 0, 0, 56, 7, 12]
@@ -222,7 +209,7 @@ class BlinkLab(threading.Thread):
         print 'first network of tag: {}'.format(self.tag.dn_getParameter_networkId().networkId)
         
         # run experiment for different network size for test 5 motes maximum
-        for networksize in range(5,-1,-1):
+        for networksize in range(33,-1,-3):
             idx += 1
             print '\n\nrun experiment {} motes index {}!!!'.format(networksize, idx)
             self.runExperimentForSize(networksize)
@@ -243,12 +230,11 @@ class BlinkLab(threading.Thread):
         # configure the manager's ACL
 
         mote_list = [ALLMOTES[a] for a in range(networksize)] + [TAG_EUI]
-        del_mote_list = [ALLMOTES[i] for i in range(5-networksize)]
 
-        if networksize == 5:
-            del_mote_list_2 = []
+        if networksize == 33:
+            del_mote_list = []
         else:
-            del_mote_list_2 = [ALLMOTES[i] for i in range((idx -2)*1, (idx-1)*1)]
+            del_mote_list = [ALLMOTES[i] for i in range((idx -2)*3, (idx-1)*3)]
 
         ## detach 5 motes to the manager 1
         # 1, delete ACL
@@ -257,7 +243,7 @@ class BlinkLab(threading.Thread):
         # 4, reset all networm belong manager 1
 
         # detach 45-networksize motes in the manager 1
-        for m in del_mote_list_2:
+        for m in del_mote_list:
            self.mgr1.dn_deleteACLEntry(
                macAddress = m,
             )
@@ -295,8 +281,13 @@ class BlinkLab(threading.Thread):
         print '\nchange network id successfully and wait for manager 1 and manager 2 deliver the network id to motes\n'
 
         # wait for manager deliver packet
-        print 'time is {}'.format((res1.numMotes+res2.numMotes)*60 + 5)
-        time.sleep(180)  
+        
+        if res1.numMotes >= res2.numMotes:
+            timeWait = (res1.numMotes)*30 + 45
+        else:
+            timeWait = (res2.numMotes)*30 + 45
+        print 'waiting time is {}s'.format(timeWait)
+        time.sleep(timeWait)
         
         self.mgr1.dn_reset(
                 type       = 0,
@@ -362,7 +353,7 @@ class BlinkLab(threading.Thread):
             for p in range(5):
                 print 'send packet {0} of transaction {1}'.format(p,t)
                 try:
-                    payloadBlink = '{0}{1}_{2}'.format(p, t, time.time())
+                    payloadBlink = 'Size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
                     res = self.tag.dn_blink(
                         fIncludeDscvNbrs = 1,
                         payload          = [ord(i) for i in payloadBlink],
