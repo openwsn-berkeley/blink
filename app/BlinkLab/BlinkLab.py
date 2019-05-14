@@ -34,39 +34,52 @@ SERIALPORT_MGR          = 'COM7'
 SERIALPORT_MGR_2        = 'COM15'
 SERIALPORT_TAG          = 'COM11'
 ALLMOTES                = [
-    [0, 23, 13, 0, 0, 49, 194, 249] ,
-[0, 23, 13, 0, 0, 49, 195, 83]  ,
-[0, 23, 13, 0, 0, 49, 209, 172] ,
-[0, 23, 13, 0, 0, 49, 213, 32]  ,
-[0, 23, 13, 0, 0, 49, 199, 222] ,
-[0, 23, 13, 0, 0, 49, 202, 3]   ,
-[0, 23, 13, 0, 0, 49, 201, 230] ,
-[0, 23, 13, 0, 0, 49, 198, 184] ,
-[0, 23, 13, 0, 0, 49, 193, 160] ,
-[0, 23, 13, 0, 0, 49, 195, 71]  ,
-[0, 23, 13, 0, 0, 49, 193, 193] ,
-[0, 23, 13, 0, 0, 49, 213, 106] ,
-[0, 23, 13, 0, 0, 49, 198, 146] ,
-[0, 23, 13, 0, 0, 49, 213, 31]  ,
-[0, 23, 13, 0, 0, 49, 213, 1]   ,
-[0, 23, 13, 0, 0, 49, 195, 10]  ,
-[0, 23, 13, 0, 0, 49, 193, 161] ,
-[0, 23, 13, 0, 0, 49, 204, 64]  ,
-[0, 23, 13, 0, 0, 49, 209, 168] ,
-[0, 23, 13, 0, 0, 49, 213, 59]  ,
-[0, 23, 13, 0, 0, 49, 199, 219] ,
-[0, 23, 13, 0, 0, 49, 195, 25]  ,
-[0, 23, 13, 0, 0, 49, 204, 88]  ,
-[0, 23, 13, 0, 0, 49, 195, 55]  ,
-[0, 23, 13, 0, 0, 49, 204, 15]  ,
-[0, 23, 13, 0, 0, 49, 195, 62]  ,
-[0, 23, 13, 0, 0, 49, 213, 105] ,
-[0, 23, 13, 0, 0, 49, 193, 171] ,
-[0, 23, 13, 0, 0, 49, 202, 5]   ,
-[0, 23, 13, 0, 0, 49, 213, 48]  ,
-[0, 23, 13, 0, 0, 49, 203, 229] ,
-[0, 23, 13, 0, 0, 49, 198, 161] ,
-[0, 23, 13, 0, 0, 49, 201, 218] ,
+    [0, 23, 13, 0, 0, 49, 198, 161], 
+    [0, 23, 13, 0, 0, 49, 193, 171], 
+    [0, 23, 13, 0, 0, 49, 204, 15], 
+    [0, 23, 13, 0, 0, 49, 195, 71], 
+    [0, 23, 13, 0, 0, 49, 213, 59], 
+    [0, 23, 13, 0, 0, 49, 201, 230], 
+    [0, 23, 13, 0, 0, 49, 202, 3], 
+    [0, 23, 13, 0, 0, 49, 209, 95], 
+    [0, 23, 13, 0, 0, 49, 213, 103], 
+    [0, 23, 13, 0, 0, 49, 213, 106], 
+    [0, 23, 13, 0, 0, 49, 213, 48], 
+    [0, 23, 13, 0, 0, 49, 202, 5], 
+    [0, 23, 13, 0, 0, 49, 204, 46], 
+    [0, 23, 13, 0, 0, 49, 193, 161], 
+    [0, 23, 13, 0, 0, 49, 209, 112], 
+    [0, 23, 13, 0, 0, 49, 213, 1], 
+    [0, 23, 13, 0, 0, 49, 204, 64], 
+    [0, 23, 13, 0, 0, 49, 199, 176], 
+    [0, 23, 13, 0, 0, 49, 201, 241], 
+    [0, 23, 13, 0, 0, 49, 213, 32], 
+    [0, 23, 13, 0, 0, 49, 209, 172], 
+    [0, 23, 13, 0, 0, 49, 198, 184], 
+    [0, 23, 13, 0, 0, 49, 195, 55], 
+    [0, 23, 13, 0, 0, 49, 194, 249], 
+    [0, 23, 13, 0, 0, 49, 204, 88], 
+    [0, 23, 13, 0, 0, 49, 195, 83], 
+    [0, 23, 13, 0, 0, 49, 203, 229], 
+    [0, 23, 13, 0, 0, 49, 209, 50], 
+    [0, 23, 13, 0, 0, 49, 193, 160], 
+    [0, 23, 13, 0, 0, 49, 212, 126], 
+    [0, 23, 13, 0, 0, 49, 195, 113], 
+    [0, 23, 13, 0, 0, 49, 209, 211], 
+    [0, 23, 13, 0, 0, 49, 193, 193], 
+    [0, 23, 13, 0, 0, 49, 195, 62], 
+    [0, 23, 13, 0, 0, 49, 213, 31], 
+    [0, 23, 13, 0, 0, 49, 209, 168], 
+    [0, 23, 13, 0, 0, 49, 195, 25], 
+    [0, 23, 13, 0, 0, 49, 199, 222], 
+    [0, 23, 13, 0, 0, 49, 203, 231], 
+    [0, 23, 13, 0, 0, 49, 204, 89], 
+    [0, 23, 13, 0, 0, 49, 198, 146], 
+    [0, 23, 13, 0, 0, 49, 213, 105], 
+    [0, 23, 13, 0, 0, 49, 199, 219], 
+    [0, 23, 13, 0, 0, 49, 213, 134], 
+    [0, 23, 13, 0, 0, 49, 213, 50], 
+    [0, 23, 13, 0, 0, 49, 195, 10],
 ]
 
 TAG_EUI = [0, 23, 13, 0, 0, 56, 7, 12]
@@ -79,6 +92,8 @@ mgr2 = IpMgrConnectorSerial.IpMgrConnectorSerial()
 tag = IpMoteConnector.IpMoteConnector()
 NotifEventDone = threading.Event()
 idx = 0
+issueTime = 0
+payLoadBlink = 'Hello'
 
 def printAndLog(msg_type, msg, firstline = False):
     global fileLock
@@ -105,7 +120,7 @@ def handle_mgr_notif(notifName, notifParams):
     moteID = {}
     moteID = getAllMote(mgr1)
     try: 
-        printAndLog('MGNNOTIF', {'notifName': notifName, 'notifParams': notifParams})
+        printAndLog('MGRNOTIF', {'notifName': notifName, 'notifParams': notifParams})
         data, neighbors = blink.decode_blink(payload)
         if data:
             #print '\nBlink packet received from {0}'.format(mac_address)
@@ -118,19 +133,22 @@ def handle_mgr_notif(notifName, notifParams):
                 listNeighbor.append(neighbor_id) 
                            
             if len(listNeighbor) == 1:
-                jsonRssi = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])}]}
+                mgrBlinkInfo = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])}]}
             elif len(listNeighbor) == 2:
-                jsonRssi = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])}]}
+                mgrBlinkInfo = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])}]}
             elif len(listNeighbor) == 3:
-                jsonRssi = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])},{'MoteID': '{0}'.format(listNeighbor[2]), 'MAC':moteID[listNeighbor[2]], 'RSSI': '{0}'.format(listRSSI[2])}]}
+                mgrBlinkInfo = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])},{'MoteID': '{0}'.format(listNeighbor[2]), 'MAC':moteID[listNeighbor[2]], 'RSSI': '{0}'.format(listRSSI[2])}]}
             else:
-                jsonRssi = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])},{'MoteID': '{0}'.format(listNeighbor[2]), 'MAC':moteID[listNeighbor[2]], 'RSSI': '{0}'.format(listRSSI[2])},{'MoteID': '{0}'.format(listNeighbor[3]), 'MAC':moteID[listNeighbor[3]], 'RSSI': '{0}'.format(listRSSI[3])}]}
+                mgrBlinkInfo = {'Time': '{}'.format(RxTime), 'Payload':'{}'.format(data),'BlinkAddress': '{0}'.format(mac_address), 'HeardMote': [{'MoteID': '{0}'.format(listNeighbor[0]), 'MAC':moteID[listNeighbor[0]], 'RSSI': '{0}'.format(listRSSI[0])},{'MoteID': '{0}'.format(listNeighbor[1]), 'MAC':moteID[listNeighbor[1]], 'RSSI': '{0}'.format(listRSSI[1])},{'MoteID': '{0}'.format(listNeighbor[2]), 'MAC':moteID[listNeighbor[2]], 'RSSI': '{0}'.format(listRSSI[2])},{'MoteID': '{0}'.format(listNeighbor[3]), 'MAC':moteID[listNeighbor[3]], 'RSSI': '{0}'.format(listRSSI[3])}]}
                                  
             if not neighbors:
                 print '    --> Neighbors = n/a'            
             print '    --> Data Sent = {0}\n\n'.format(data.encode("hex"))
+            # print and log Bink data to blinkLab.txt file            
+            printAndLog('MGRBLINK', mgrBlinkInfo)
+            
             with open('manager.json', 'a') as f:                    
-                f.write(json.dumps(jsonRssi))            
+                f.write(json.dumps(mgrBlinkInfo))            
                 f.write('\n')
     except Exception as err:
         print err
@@ -157,16 +175,23 @@ def getAllMote(mgrconnector):
 
 # Processing data in Blink mote
 def handle_mote_notif(mynotif):
+    global issueTime
+    global payLoadBlink
     # Check for txDone notification, then print status information
+    printAndLog('BLKNOTIF', mynotif)
     if mynotif[0]==['txDone']:
+        #txDoneTime = datetime.datetime.now()
         for key, value in mynotif[1].items():
             if key == "status":
                 if value == 0:
-                    txDone = datetime.datetime.now()
+                    txDoneTime = datetime.datetime.now()
+                    blinkSide = {'TimeIssue': '{}'.format(issueTime), 'TimeTxDone': '{}'.format(txDoneTime), 'TimeTxDone-TimeIssue':'{}'.format(txDoneTime-issueTime), 'Payload':'{}'.format(payLoadBlink)}
                     print ('\n     txDone Status = {0}, Blink packet successfully sent\n'.format(value))
+                    printAndLog('BLKPACKET', blinkSide)
                 else:
                     print ('\n     txDone Status = {0}, Error, Blink packet NOT sent\n'.format(value))
-                NotifEventDone.set()
+                NotifEventDone.set()    
+    
 def mote_disconnection():
     print 'Mote was disconnected\n'
 
@@ -209,7 +234,7 @@ class BlinkLab(threading.Thread):
         print 'first network of tag: {}'.format(self.tag.dn_getParameter_networkId().networkId)
         
         # run experiment for different network size for test 5 motes maximum
-        for networksize in range(33,-1,-3):
+        for networksize in range(5,-1,-1):
             idx += 1
             print '\n\nrun experiment {} motes index {}!!!'.format(networksize, idx)
             self.runExperimentForSize(networksize)
@@ -221,20 +246,19 @@ class BlinkLab(threading.Thread):
     #======================== private ==========================================
     def runExperimentForSize(self,networksize):
         global idx
+        global issueTime
+        global payLoadBlink
         res1 = self.mgr1.dn_getNetworkInfo()
         res2 = self.mgr2.dn_getNetworkInfo()
         # log
-        #printAndLog('MNGCMD', {'cmd': 'dn_setACLEntry'})
-        printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
+        #printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
         
         # configure the manager's ACL
 
-        mote_list = [ALLMOTES[a] for a in range(networksize)] + [TAG_EUI]
-
-        if networksize == 33:
+        if networksize == 5:
             del_mote_list = []
         else:
-            del_mote_list = [ALLMOTES[i] for i in range((idx -2)*3, (idx-1)*3)]
+            del_mote_list = [ALLMOTES[i] for i in range((idx -2)*1, (idx-1)*1)]
 
         ## detach 5 motes to the manager 1
         # 1, delete ACL
@@ -280,8 +304,7 @@ class BlinkLab(threading.Thread):
         # reset all networks to apply new ID
         print '\nchange network id successfully and wait for manager 1 and manager 2 deliver the network id to motes\n'
 
-        # wait for manager deliver packet
-        
+        # wait for both manager deliver network id to all motes
         if res1.numMotes >= res2.numMotes:
             timeWait = (res1.numMotes)*30 + 45
         else:
@@ -302,7 +325,7 @@ class BlinkLab(threading.Thread):
         )
         time.sleep(1)              
 
-        print 'reset all networks done and wait for 45s to change network id in the motes !'
+        print 'reset all networks done and wait for 45s to change network id in the motes!'
 
         self.mgr1.disconnect()
         self.mgr2.disconnect()
@@ -314,8 +337,20 @@ class BlinkLab(threading.Thread):
         self.mgr2.connect({'port': SERIALPORT_MGR_2})
         self.tag.connect({'port': SERIALPORT_TAG})
 
-        print 'connect manager 1, 2 and blink mote again done!'
+        print 'connect manager 1, 2 and blink mote again done!'       
         
+        
+        # wait for both manager 1, 2 network to form to ensure doesn't lost any mote for next network id change
+        while True:
+            
+            res = self.mgr1.dn_getNetworkInfo()
+            print 'size of network as parameter: {0}, Mgr1.numMotes={1}, Mgr2.numMotes={2}'.format(networksize,res.numMotes,self.mgr2.dn_getNetworkInfo().numMotes)
+            if (res.numMotes==networksize) and (self.mgr2.dn_getNetworkInfo().numMotes == 5-networksize):
+                break
+            time.sleep(1)
+        printAndLog('BEGINEXPERIMENT', {'networksize': networksize})
+        printAndLog('MACMOTEID{}'.format(networksize), getAllMote(mgr1))
+
         # manager 1 subscribes network information
         print 'manager subscribes network info'
         self.mgrsub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
@@ -335,16 +370,9 @@ class BlinkLab(threading.Thread):
                           mote_disconnection,
                           )
         mynotifListener.start()
+
         print 'manager and blink heard blink now !!!'
-        
-        # wait for network to form
-        while True:
-            
-            res = self.mgr1.dn_getNetworkInfo()
-            print 'size of network as parameter: {0}, res.numMotes={1}, {2}'.format(networksize,res.numMotes, res.advertisementState)
-            if res.numMotes==networksize:
-                break
-            time.sleep(1)
+
         
         # blink transactions, tag sends the packets
         for t in range(2):
@@ -353,22 +381,23 @@ class BlinkLab(threading.Thread):
             for p in range(5):
                 print 'send packet {0} of transaction {1}'.format(p,t)
                 try:
-                    payloadBlink = 'Size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
+                    payLoadBlink = 'Size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
                     res = self.tag.dn_blink(
                         fIncludeDscvNbrs = 1,
-                        payload          = [ord(i) for i in payloadBlink],
+                        payload          = [ord(i) for i in payLoadBlink],
                     )
                     issueTime = datetime.datetime.now()
-                    print 'blink request packet {}'.format(payloadBlink)
+                    print 'blink request packet {}'.format(payLoadBlink)
                 except Exception as err:
                     print 'could not send blink packet: {0}\n'.format(err)
                 
-                print "...waiting for packet sent Notifaction \n",
+                print "...waiting for packet sent Notifacation \n",
 
                 while not NotifEventDone.is_set():
                     print '!',
                     time.sleep(1)
                 NotifEventDone.clear()
+        printAndLog('ENDEXPERIMENT', {'networksize': networksize})
 
 # Motes listen TxDone
 class NotifListener(threading.Thread):
