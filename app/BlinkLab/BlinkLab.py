@@ -102,7 +102,7 @@ def printAndLog(msg_type, msg, firstline = False):
     else:
         filemode = 'a'
     with fileLock:
-        with open('blinkLab.txt', filemode) as f:
+        with open('blinkLab.json', filemode) as f:
             f.write(
                 json.dumps({
                     'timestamp': time.time(),
@@ -124,7 +124,7 @@ def handle_mgr_notif(notifName, notifParams):
         if data:
             #print '\nBlink packet received from {0}'.format(mac_address)
             RxTime = datetime.datetime.now()
-            print(moteID)
+
             for neighbor_id, rssi in neighbors:
                 print '    --> Neighbor ID = {0},  RSSI = {1}'.format(neighbor_id, rssi)
                 # for dump information
@@ -146,10 +146,6 @@ def handle_mgr_notif(notifName, notifParams):
             # print and log Bink data to blinkLab.txt file            
             printAndLog('MGRBLINK', mgrBlinkInfo)
             
-            # write decode blink packet in other file
-            with open('mgrSide.json', 'a') as f:                    
-                f.write(json.dumps(mgrBlinkInfo))            
-                f.write('\n')
     except Exception as err:
         print err
 
@@ -158,6 +154,7 @@ def getAllMote(mgrconnector):
     currentMac     = (0,0,0,0,0,0,0,0) # start getMoteConfig() iteration with the 0 MAC address
     continueAsking = True
     moteIDMac = {}
+    moteIDMac[1] = 'Manager'
     
     while continueAsking:
         try:
@@ -166,8 +163,7 @@ def getAllMote(mgrconnector):
             continueAsking = False
         else:
             if ((not res.isAP) and (res.state in [0,1,4])):
-                moteIDMac[res.moteId] = '{}'.format(FormatUtils.formatMacString(res.macAddress))
-                moteIDMac[1] = 'Manager'
+                moteIDMac[res.moteId] = '{}'.format(FormatUtils.formatMacString(res.macAddress)) 
             currentMac = res.macAddress
     return moteIDMac
     #######
@@ -259,12 +255,6 @@ class BlinkLab(threading.Thread):
         else:
             del_mote_list = [ALLMOTES[i] for i in range((idx -2)*5, (idx-1)*5)]
 
-        ## detach 5 motes of the manager 1
-        # 1, delete ACL
-        # 2, reset 5 motes, get old network id
-        # 3, change network ID in manager 1 and also change networkId for blink
-        # 4, reset all network belong manager 1
-
         # detach 5 motes in the manager 1 for each experiment
         for m in del_mote_list:
            self.mgr1.dn_deleteACLEntry(
@@ -281,7 +271,6 @@ class BlinkLab(threading.Thread):
             print '.',
             time.sleep(1)
         
-        #time.sleep(45)
 
         oldNetId = self.mgr1.dn_getNetworkConfig().networkId
         print 'old network id from manager 1 and tag: {}'.format(oldNetId)
@@ -377,10 +366,10 @@ class BlinkLab(threading.Thread):
         print 'manager and blink heard blink now !!!'
         
         # blink transactions, tag sends the packets
-        for t in range(5):
+        for t in range(10):
             
             # blink packets
-            for p in range(10):
+            for p in range(100):
                 print 'send packet {0} of transaction {1}'.format(p,t)
                 try:
                     payLoadBlink = 'Size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
@@ -393,7 +382,7 @@ class BlinkLab(threading.Thread):
                 except Exception as err:
                     print 'could not send blink packet: {0}\n'.format(err)
                 
-                print "...waiting for packet sent Notification \n",
+                print "...waiting for packet sent notification \n",
 
                 while not NotifEventDone.is_set():
                     print '!',
