@@ -44,6 +44,7 @@ ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 194, 249],
     [0, 23, 13, 0, 0, 49, 213, 1],
 ]
+STEP                    = 2
 
 TIMEOUT_RESETMGRID      = 30
 
@@ -62,7 +63,6 @@ def printAndLog(msg_type, msg, firstline = False):
     global fileLock
     
     # print
-    
     output = []
     if msg_type=='CMD':
         if   msg['cmd']=='dn_exchangeNetworkId':
@@ -155,7 +155,7 @@ class BlinkLab(threading.Thread):
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        for networksize in range(4,-1,-2):
+        for networksize in range(4,-1,-STEP):
             self.runExperimentForSize(networksize)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
@@ -209,8 +209,12 @@ class BlinkLab(threading.Thread):
         #=== wait for len(ALLMOTES)-networksize nodes to join MGR2
         
         while True:
-            res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo") 
-            if res.numMotes==len(ALLMOTES)-networksize:
+            res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
+            if   networksize==len(ALLMOTES):
+                numMotesToMoveToParked = 0
+            else:
+                numMotesToMoveToParked = STEP
+            if res.numMotes==numMotesToMoveToParked:
                 break
             time.sleep(1)
         
@@ -218,11 +222,19 @@ class BlinkLab(threading.Thread):
         
         self.change_networkid_network_and_reset(SERIALPORT_MGR2,NETID_PARKED)
         
+        #=== wait for networksize nodes to join MGR1 (on NETID_HIDING)
+        
+        while True:
+            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
+            if res.numMotes==networksize:
+                break
+            time.sleep(1)
+        
         #=== MGR1 (+network) -> NETID_EXPERIMENT
         
         self.change_networkid_network_and_reset(SERIALPORT_MGR1,NETID_EXPERIMENT)
         
-        #=== wait for networksize nodes to join MGR1
+        #=== wait for networksize nodes to join MGR1 (on NETID_EXPERIMENT)
         
         while True:
             res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
@@ -231,8 +243,8 @@ class BlinkLab(threading.Thread):
             time.sleep(1)
         
         # when you get here:
-        # - networksize               motes are attached to MGR1
-        # - len(ALLMOTES)-networksize motes are attached to MGR2
+        # - networksize               motes are attached to MGR1 on NETID_EXPERIMENT
+        # - len(ALLMOTES)-networksize motes are attached to MGR2 on NETID_PARKED
         
         #=== retrieve moteId/macAddress correspondance on MGR1
         
@@ -240,7 +252,6 @@ class BlinkLab(threading.Thread):
         while True:
             try:
                 res     = self.issue_manager_command(SERIALPORT_MGR1,"dn_getMoteConfig", {"macAddress": currentMac, "next": True})
-                print res
             except APIError:
                 break # end of list
             else:
@@ -249,7 +260,7 @@ class BlinkLab(threading.Thread):
         ##################### step 2. issue blink commands
         
         raw_input(
-            "\nWe should have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
+            "\nVerify you have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
                 networksize,
                 len(ALLMOTES)-networksize,
             )
@@ -327,7 +338,6 @@ class BlinkLab(threading.Thread):
         res = self.issue_manager_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
         while True:
             with self.dataLock:
-                print self.lastCommandFinished[serialport],res.callbackId # poipoipoi
                 if self.lastCommandFinished[serialport]==res.callbackId:
                     break
             time.sleep(1)
