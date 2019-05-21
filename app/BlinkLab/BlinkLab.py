@@ -20,10 +20,12 @@ if __name__ == "__main__":
 import time
 import threading
 import json
+import struct
 
-from SmartMeshSDK.IpMgrConnectorSerial  import IpMgrConnectorSerial
-from SmartMeshSDK.IpMoteConnector       import IpMoteConnector
-from SmartMeshSDK.IpMgrConnectorMux     import IpMgrSubscribe
+from SmartMeshSDK.IpMgrConnectorSerial import IpMgrConnectorSerial
+from SmartMeshSDK.IpMoteConnector      import IpMoteConnector
+from SmartMeshSDK.IpMgrConnectorMux    import IpMgrSubscribe
+from SmartMeshSDK.ApiException         import APIError
 
 #============================ defines =========================================
 
@@ -39,18 +41,22 @@ TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 198, 161],
     [0, 23, 13, 0, 0, 49, 213, 31], 
-    [0, 23, 13, 0, 0, 49, 203, 229],
     [0, 23, 13, 0, 0, 49, 194, 249],
-    [0, 23, 13, 0, 0, 49, 209, 112],
     [0, 23, 13, 0, 0, 49, 213, 1],
 ]
 
-TIMEOUT_EXCHANGENETID   = 120
 TIMEOUT_RESETMGRID      = 30
 
 #============================ helpers =========================================
 
-fileLock = threading.RLock() 
+fileLock = threading.RLock()
+
+def serialport2mgr(serialport):
+    if   serialport==SERIALPORT_MGR1:
+        returnVal = 'MGR1'
+    elif serialport==SERIALPORT_MGR2:
+        returnVal = 'MGR2'
+    return returnVal
 
 def printAndLog(msg_type, msg, firstline = False):
     global fileLock
@@ -59,19 +65,18 @@ def printAndLog(msg_type, msg, firstline = False):
     
     output = []
     if msg_type=='CMD':
-        if   msg['serialport']==SERIALPORT_MGR1:
-            mgr = 'MGR1'
-        elif msg['serialport']==SERIALPORT_MGR2:
-            mgr = 'MGR2'
         if   msg['cmd']=='dn_exchangeNetworkId':
             notes = 'networkId={0}'.format(msg['params']['id'])
         elif msg['cmd']=='dn_setNetworkConfig':
             notes = 'networkId={0}'.format(msg['params']['networkId'])
-        elif msg['cmd']=='dn_getNeworkInfo':
-            notes = 'numMotes={0}'.format(msg['res']['numMotes'])
+        elif msg['cmd']=='dn_getNetworkInfo':
+            notes = 'numMotes={0}'.format(msg['res'].numMotes)
         else:
             notes = ''
-        output += ['{0} {1} {2} {3}'.format(msg_type, mgr, msg['cmd'], notes)]
+        output += ['{0} {1:>6} {2} {3}'.format(serialport2mgr(msg['serialport']), msg_type, msg['cmd'], notes)]
+    elif msg_type=='NOTIF':
+        notes   = ''
+        output += ['{0} {1:>6} {2} {3}'.format(serialport2mgr(msg['serialport']), msg_type, msg['notifName'], notes)]
     else:
         output += ['{0} {1}'.format(msg_type,msg)]
     output = '\n'.join(output)
@@ -91,18 +96,30 @@ def printAndLog(msg_type, msg, firstline = False):
                     'msg'      : msg,
                 })+ '\n'
             )
-    
+
 def handle_mgr1_notif(notifName, notifParams):
-    try:
-        printAndLog('NOTIF', {'notifName': notifName, 'notifParams': notifParams})
-    except Exception as err:
-        print err
+    BlinkLab().handle_mgr_notif(SERIALPORT_MGR1, notifName, notifParams)
+
+def handle_mgr2_notif(notifName, notifParams):
+    BlinkLab().handle_mgr_notif(SERIALPORT_MGR2, notifName, notifParams)
 
 #============================ classes =========================================
 
 class BlinkLab(threading.Thread):
+    _instance = None
+    _init     = False
+    
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(BlinkLab, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
     
     def __init__(self):
+        
+        # singleton
+        if self._init:
+            return
+        self._init = True
         
         # log
         printAndLog('START', '', firstline = True)
@@ -116,22 +133,39 @@ class BlinkLab(threading.Thread):
     
     def run(self):
         
-        self.mgr = {}
+        self.dataLock                  = threading.RLock()
+        self.mgr                       = {}
+        self.mgrsub                    = {}
+        self.lastCommandFinished       = {
+            SERIALPORT_MGR1: None,
+            SERIALPORT_MGR2: None,
+        }
         
-        # connect to manager1
+        # connect and subscribe to manager1
         self.mgr[SERIALPORT_MGR1] = IpMgrConnectorSerial.IpMgrConnectorSerial()
         self.mgr[SERIALPORT_MGR1].connect({'port': SERIALPORT_MGR1})
+        self.subscribeManager(SERIALPORT_MGR1)
         
-        # connect to manager2
+        # connect and subscribe manager2
         self.mgr[SERIALPORT_MGR2] = IpMgrConnectorSerial.IpMgrConnectorSerial()
         self.mgr[SERIALPORT_MGR2].connect({'port': SERIALPORT_MGR2})
+        self.subscribeManager(SERIALPORT_MGR2)
         
         # connect to tag
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        for networksize in range(6,-1,-3):
+        for networksize in range(4,-1,-2):
             self.runExperimentForSize(networksize)
+    
+    def handle_mgr_notif(self, serialport, notifName, notifParams):
+        try:
+            printAndLog('NOTIF', {'serialport': serialport, 'notifName': notifName, 'notifParams': notifParams})
+            if notifName=='eventCommandFinished':
+                with self.dataLock:
+                    self.lastCommandFinished[serialport] = struct.unpack('>I',''.join([chr(b) for b in notifParams.callbackId]))[0]
+        except Exception as err:
+            print err
     
     #======================== private ==========================================
     
@@ -140,7 +174,7 @@ class BlinkLab(threading.Thread):
         # log
         printAndLog('NETWORKSIZE', {'networksize': networksize})
         
-        #===== step 1. prepare network
+        ##################### step 1. prepare network
         
         #=== MGR2 -> NETID_PARKED
         
@@ -148,26 +182,13 @@ class BlinkLab(threading.Thread):
         
         #=== configure and reset MGR1
         
-        # clear ACL
+        # ACL
         self.issue_manager_command(SERIALPORT_MGR1,"dn_deleteACLEntry", {"macAddress": [0x00]*8})
-        
-        # add ACL entries
         for m in [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]:
             self.issue_manager_command(SERIALPORT_MGR1,"dn_setACLEntry", {"macAddress": m, "joinKey": [ord(b) for b in 'DUSTNETWORKSROCK']})
         
         # MGR1 -> NETID_EXPERIMENT
         self.change_networkid_manager_and_reset(SERIALPORT_MGR1,NETID_EXPERIMENT)
-        
-        # subscribe to notifications
-        '''
-        self.mgr1sub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
-        self.mgr1sub.start()
-        self.mgr1sub.subscribe(
-            notifTypes =    IpMgrSubscribe.IpMgrSubscribe.ALLNOTIF,
-            fun =           handle_mgr1_notif,
-            isRlbl =        False,
-        )
-        '''
         
         #=== wait for networksize nodes to join MGR1
         
@@ -215,7 +236,17 @@ class BlinkLab(threading.Thread):
         
         #=== retrieve moteId/macAddress correspondance on MGR1
         
-        # TODO
+        currentMac      = (0,0,0,0,0,0,0,0) 
+        while True:
+            try:
+                res     = self.issue_manager_command(SERIALPORT_MGR1,"dn_getMoteConfig", {"macAddress": currentMac, "next": True})
+                print res
+            except APIError:
+                break # end of list
+            else:
+                currentMac = res.macAddress
+        
+        ##################### step 2. issue blink commands
         
         raw_input(
             "\nWe should have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
@@ -223,8 +254,6 @@ class BlinkLab(threading.Thread):
                 len(ALLMOTES)-networksize,
             )
         )
-        
-        #===== step 1. issue blink commands
         
         '''
         # blink transactions
@@ -295,11 +324,18 @@ class BlinkLab(threading.Thread):
         self.resetManager(serialport)
     
     def change_networkid_network_and_reset(self, serialport, newnetid):
-        self.issue_manager_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
-        time.sleep(TIMEOUT_EXCHANGENETID) # worst duration for dn_exchangeNetworkId to take effect
+        res = self.issue_manager_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
+        while True:
+            with self.dataLock:
+                print self.lastCommandFinished[serialport],res.callbackId # poipoipoi
+                if self.lastCommandFinished[serialport]==res.callbackId:
+                    break
+            time.sleep(1)
         self.resetManager(serialport)
     
     def resetManager(self,serialport):
+    
+        # issue system reset command
         self.issue_manager_command(serialport,"dn_reset",
             {
                 "type"                 : 0, # reset system: type = 0, reset specific motes: type= 2
@@ -307,8 +343,30 @@ class BlinkLab(threading.Thread):
             }
         )
         self.mgr[serialport].disconnect()
+        
+        # clear the lastCommandFinished for that manager
+        with self.dataLock:
+            self.lastCommandFinished[serialport] = None
+        
+        # wait for motes to disconnect
         time.sleep(TIMEOUT_RESETMGRID)
+        
+        # reconnect and resubsribe to manager
         self.mgr[serialport].connect({'port': serialport})
+        self.subscribeManager(serialport)
+    
+    def subscribeManager(self,serialport):
+        self.mgrsub[serialport] = IpMgrSubscribe.IpMgrSubscribe(self.mgr[serialport])
+        self.mgrsub[serialport].start()
+        if   serialport==SERIALPORT_MGR1:
+            fun = handle_mgr1_notif
+        elif serialport==SERIALPORT_MGR2:
+            fun = handle_mgr2_notif
+        self.mgrsub[serialport].subscribe(
+            notifTypes =    IpMgrSubscribe.IpMgrSubscribe.ALLNOTIF,
+            fun =           fun,
+            isRlbl =        False,
+        )
 
 #============================ main ============================================
 
