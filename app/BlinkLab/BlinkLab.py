@@ -1,3 +1,9 @@
+'''
+Starting point:
+- 2 managers
+- 45 motes set to netid=NETID1
+'''
+
 #!/usr/bin/python
 
 #============================ adjust path =====================================
@@ -14,95 +20,84 @@ if __name__ == "__main__":
 import time
 import threading
 import json
-import datetime
 
 from SmartMeshSDK.IpMgrConnectorSerial  import IpMgrConnectorSerial
 from SmartMeshSDK.IpMoteConnector       import IpMoteConnector
 from SmartMeshSDK.IpMgrConnectorMux     import IpMgrSubscribe
-from SmartMeshSDK.protocols.blink       import blink
-
-
-from SmartMeshSDK.utils                 import AppUtils, \
-                                               FormatUtils
-from SmartMeshSDK.ApiException          import APIError, \
-                                                ConnectionError,  \
-                                                CommandTimeoutError
 
 #============================ defines =========================================
 
-SERIALPORT_MGR_1        = 'COM7'
-SERIALPORT_MGR_2        = 'COM15'
-SERIALPORT_TAG          = 'COM11'
-ALLMOTES                = [
-    [0, 23, 13, 0, 0, 49, 198, 161], 
-    [0, 23, 13, 0, 0, 49, 193, 171], 
-    [0, 23, 13, 0, 0, 49, 204, 15], 
-    [0, 23, 13, 0, 0, 49, 195, 71], 
-    [0, 23, 13, 0, 0, 49, 213, 59], 
-    [0, 23, 13, 0, 0, 49, 201, 230], 
-    [0, 23, 13, 0, 0, 49, 202, 3], 
-    [0, 23, 13, 0, 0, 49, 209, 95], 
-    [0, 23, 13, 0, 0, 49, 213, 103], 
-    [0, 23, 13, 0, 0, 49, 213, 106], 
-    [0, 23, 13, 0, 0, 49, 213, 48], 
-    [0, 23, 13, 0, 0, 49, 202, 5], 
-    [0, 23, 13, 0, 0, 49, 204, 46], 
-    [0, 23, 13, 0, 0, 49, 193, 161], 
-    [0, 23, 13, 0, 0, 49, 209, 112], 
-    [0, 23, 13, 0, 0, 49, 213, 1], 
-    [0, 23, 13, 0, 0, 49, 204, 64], 
-    [0, 23, 13, 0, 0, 49, 201, 218], 
-    [0, 23, 13, 0, 0, 49, 201, 241], 
-    [0, 23, 13, 0, 0, 49, 213, 32], 
-    [0, 23, 13, 0, 0, 49, 209, 172], 
-    [0, 23, 13, 0, 0, 49, 198, 184], 
-    [0, 23, 13, 0, 0, 49, 195, 55], 
-    [0, 23, 13, 0, 0, 49, 194, 249], 
-    [0, 23, 13, 0, 0, 49, 204, 88], 
-    [0, 23, 13, 0, 0, 49, 195, 83], 
-    [0, 23, 13, 0, 0, 49, 203, 229], 
-    [0, 23, 13, 0, 0, 49, 209, 50], 
-    [0, 23, 13, 0, 0, 49, 193, 160],  
-    [0, 23, 13, 0, 0, 49, 195, 113], 
-    [0, 23, 13, 0, 0, 49, 209, 211], 
-    [0, 23, 13, 0, 0, 49, 193, 193], 
-    [0, 23, 13, 0, 0, 49, 195, 62], 
-    [0, 23, 13, 0, 0, 49, 213, 31], 
-    [0, 23, 13, 0, 0, 49, 209, 168], 
-    [0, 23, 13, 0, 0, 49, 195, 25], 
-    [0, 23, 13, 0, 0, 49, 199, 222], 
-    [0, 23, 13, 0, 0, 49, 203, 231], 
-    [0, 23, 13, 0, 0, 49, 204, 89], 
-    [0, 23, 13, 0, 0, 49, 198, 146], 
-    [0, 23, 13, 0, 0, 49, 213, 105], 
-    [0, 23, 13, 0, 0, 49, 199, 219], 
-    [0, 23, 13, 0, 0, 49, 213, 134], 
-    [0, 23, 13, 0, 0, 49, 213, 50], 
-    [0, 23, 13, 0, 0, 49, 195, 10],
-]
+NETID_PRIMARY           = 601
+NETID_SECONDARY         = 602
 
-TAG_EUI = [0, 23, 13, 0, 0, 56, 7, 12]
+SERIALPORT_MGR1         = 'COM7'
+SERIALPORT_MGR2         = 'COM15'
+SERIALPORT_TAG          = 'COM11'
+
+TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
+ALLMOTES                = [
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xc6,0xa1,
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xd1,0x70,
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xc2,0xf9, 
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xcb,0xe5 ,
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xd5,0x1f ,
+    0x00,0x17,0x0d,0x00,0x00,0x31,0xd5,0x01 ,
+    #[0, 23, 13, 0, 0, 49, 201, 230], 
+    #[0, 23, 13, 0, 0, 49, 202, 3], 
+    #[0, 23, 13, 0, 0, 49, 209, 95], 
+    #[0, 23, 13, 0, 0, 49, 213, 103], 
+    #[0, 23, 13, 0, 0, 49, 213, 106], 
+    #[0, 23, 13, 0, 0, 49, 213, 48], 
+    #[0, 23, 13, 0, 0, 49, 202, 5], 
+    #[0, 23, 13, 0, 0, 49, 204, 46], 
+    #[0, 23, 13, 0, 0, 49, 193, 161], 
+    #[0, 23, 13, 0, 0, 49, 209, 112], 
+    #[0, 23, 13, 0, 0, 49, 213, 1], 
+    #[0, 23, 13, 0, 0, 49, 204, 64], 
+    #[0, 23, 13, 0, 0, 49, 199, 176], 
+    #[0, 23, 13, 0, 0, 49, 201, 241], 
+    #[0, 23, 13, 0, 0, 49, 213, 32], 
+    #[0, 23, 13, 0, 0, 49, 209, 172], 
+    #[0, 23, 13, 0, 0, 49, 198, 184], 
+    #[0, 23, 13, 0, 0, 49, 195, 55], 
+    #[0, 23, 13, 0, 0, 49, 194, 249], 
+    #[0, 23, 13, 0, 0, 49, 204, 88], 
+    #[0, 23, 13, 0, 0, 49, 195, 83], 
+    #[0, 23, 13, 0, 0, 49, 203, 229], 
+    #[0, 23, 13, 0, 0, 49, 209, 50], 
+    #[0, 23, 13, 0, 0, 49, 193, 160], 
+    #[0, 23, 13, 0, 0, 49, 212, 126], 
+    #[0, 23, 13, 0, 0, 49, 195, 113], 
+    #[0, 23, 13, 0, 0, 49, 209, 211], 
+    #[0, 23, 13, 0, 0, 49, 193, 193], 
+    #[0, 23, 13, 0, 0, 49, 195, 62], 
+    #[0, 23, 13, 0, 0, 49, 213, 31], 
+    #[0, 23, 13, 0, 0, 49, 209, 168], 
+    #[0, 23, 13, 0, 0, 49, 195, 25], 
+    #[0, 23, 13, 0, 0, 49, 199, 222], 
+    #[0, 23, 13, 0, 0, 49, 203, 231], 
+    #[0, 23, 13, 0, 0, 49, 204, 89], 
+    #[0, 23, 13, 0, 0, 49, 198, 146], 
+    #[0, 23, 13, 0, 0, 49, 213, 105], 
+    #[0, 23, 13, 0, 0, 49, 199, 219], 
+    #[0, 23, 13, 0, 0, 49, 213, 134], 
+    #[0, 23, 13, 0, 0, 49, 213, 50], 
+    #[0, 23, 13, 0, 0, 49, 195, 10],
+]
 
 #============================ helpers =========================================
 
 fileLock = threading.RLock() 
-mgr1 = IpMgrConnectorSerial.IpMgrConnectorSerial()
-mgr2 = IpMgrConnectorSerial.IpMgrConnectorSerial()
-tag = IpMoteConnector.IpMoteConnector()
-NotifEventDone = threading.Event()
-idx = 0
-issueTime = 0
-payLoadBlink = 'Hello'
 
 def printAndLog(msg_type, msg, firstline = False):
     global fileLock
     print msg_type, msg
     if firstline:
-        filemode = 'a'
+        filemode = 'w'
     else:
         filemode = 'a'
     with fileLock:
-        with open('blinkLab.json', filemode) as f:
+        with open('blinkLlab.txt', filemode) as f:
             f.write(
                 json.dumps({
                     'timestamp': time.time(),
@@ -110,39 +105,12 @@ def printAndLog(msg_type, msg, firstline = False):
                     'msg'      : msg,
                 })+ '\n'
             )
-   
-def handle_mgr_notif(notifName, notifParams):  
-    try: 
-        printAndLog('MGRNOTIF', {'notifName': notifName, 'notifParams': notifParams})            
+    
+def handle_mgr1_notif(notifName, notifParams):
+    try:
+        printAndLog('MGNNOTIF', {'notifName': notifName, 'notifParams': notifParams})
     except Exception as err:
         print err
-
-# ---- Get all MAC address and ID
-def getAllMote(mgrconnector):
-    currentMac     = (0,0,0,0,0,0,0,0) # start getMoteConfig() iteration with the 0 MAC address
-    continueAsking = True
-    moteIDMac = {}
-    moteIDMac[1] = 'Manager'
-    
-    while continueAsking:
-        try:
-            res = mgrconnector.dn_getMoteConfig(currentMac,True)
-        except APIError:
-            continueAsking = False
-        else:
-            if ((not res.isAP) and (res.state in [0,1,4])):
-                moteIDMac[res.moteId] = '{}'.format(res.macAddress) 
-            currentMac = res.macAddress
-    return moteIDMac
-    #######
-
-
-# Processing data in Blink mote
-def handle_mote_notif(mynotif):
-    printAndLog('TAGNOTIF', mynotif)
-    
-def mote_disconnection():
-    print 'Mote was disconnected\n'
 
 #============================ classes =========================================
 
@@ -161,245 +129,156 @@ class BlinkLab(threading.Thread):
     #======================== public ==========================================
     
     def run(self):
-        global idx
-        mote_list = [ALLMOTES[a] for a in range(len(ALLMOTES))] + [TAG_EUI]
-
-        # connect to manager 1 (manager log data for experiment)
-        self.mgr1 = mgr1
-        self.mgr1.connect({'port': SERIALPORT_MGR_1})
-        print 'connect manager 1 done!'
-
-        # connect to manager 2 (manager keeps motes)
-        self.mgr2 = mgr2
-        self.mgr2.connect({'port': SERIALPORT_MGR_2})
-        print 'connect manager 2 done!'
+        
+        # connect to manager1
+        self.mgr1 = IpMgrConnectorSerial.IpMgrConnectorSerial()
+        self.mgr1.connect({'port': SERIALPORT_MGR1})
+        
+        # connect to manager2
+        self.mgr2 = IpMgrConnectorSerial.IpMgrConnectorSerial()
+        self.mgr2.connect({'port': SERIALPORT_MGR2})
         
         # connect to tag
-        self.tag = tag
-        self.tag.connect({'port': SERIALPORT_TAG})
-        print 'connect tag done!'
-
-        # create acl in both managers to make sure only motes in the experiment can join these manager
-        for m in mote_list:
-            self.mgr1.dn_setACLEntry(
-                macAddress   = m,
-                joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'], 
-                           
-            )
-            self.mgr1.dn_setACLEntry(
-                macAddress   = m,
-                joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'], 
-                           
-            )
-
-        print 'first network id of manager 1: {}'.format(self.mgr1.dn_getNetworkConfig().networkId)
-        print 'first network id of manager 2: {}'.format(self.mgr2.dn_getNetworkConfig().networkId)
-        print 'first network id of tag: {}'.format(self.tag.dn_getParameter_networkId().networkId)
+        self.tag = IpMoteConnector.IpMoteConnector()
+        self.tag.connect({'port':  SERIALPORT_TAG})
         
-        # run experiment for different network size for test 5 motes maximum
-        for networksize in range(45,-1,-5):
-            idx += 1
-            print '\n\nrun experiment {} motes index {}!!!'.format(networksize, idx)
+        for networksize in range(6,-1,-3):
             self.runExperimentForSize(networksize)
-			
+    
     #======================== private ==========================================
+    
     def runExperimentForSize(self,networksize):
-        global idx
-        global payLoadBlink
-        res1 = self.mgr1.dn_getNetworkInfo()
-        res2 = self.mgr2.dn_getNetworkInfo()
         
-        # create the mote list that is will be deleted from manager 1 for each experiment
-        if networksize == 45:
-            del_mote_list = []
-        else:
-            del_mote_list = [ALLMOTES[i] for i in range((idx -2)*5, (idx-1)*5)]
-
-        # detach 5 motes in the manager 1 for each experiment
-        for m in del_mote_list:
-           self.mgr1.dn_deleteACLEntry(
-               macAddress = m,
-            )
-           self.mgr1.dn_reset(
-                type       = 2,
-                macAddress = m,
-            )
-
-        # wait for all motes in manager 1 after detaching motes
-        print 'wait for removing mote out of manager 1'
-        while self.mgr1.dn_getNetworkInfo().numMotes != networksize:
-            print '.',
-            time.sleep(1)
+        # log
+        printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
         
-
-        oldNetId = self.mgr1.dn_getNetworkConfig().networkId
-        print 'old network id from manager 1 and tag: {}'.format(oldNetId)
-        print 'old network id from manager 2: {}'.format(self.mgr2.dn_getNetworkConfig().networkId)
-
-        # set new network id for manager 1, 2 and tag
-
-        self.mgr1.dn_exchangeNetworkId(
-            id = oldNetId + 2
-        )
-
-        self.tag.dn_setParameter_networkId(
-            networkId = oldNetId + 2
-        )
-
+        #===== step 1. prepare network
+        
+        #=== move mgr2 to NETID_SECONDARY
+        
+        # change netid
         self.mgr2.dn_exchangeNetworkId(
-            id = oldNetId
+            id = NETID_SECONDARY,
         )
-
-        print 'new network id from manager 1 and tag: {}'.format(self.mgr1.dn_getNetworkConfig().networkId)
-        print 'new network id from manager 2: {}\n'.format(self.mgr2.dn_getNetworkConfig().networkId)
-
-        # reset all networks to apply new ID
-        print '\nchange network id successfully and wait for manager 1 and manager 2 deliver the network id to motes\n'
-
-        # wait for both manager deliver network id to all motes
-        if res1.numMotes >= res2.numMotes:
-            timeWait = (res1.numMotes)*30 + 45
-        else:
-            timeWait = (res2.numMotes)*30 + 45
-        print 'waiting time is {}s'.format(timeWait)
-        time.sleep(timeWait)
         
-        self.mgr1.dn_reset(
-            type       = 0,
-            macAddress = [0x00]*8,
+        # reset manager
+        self.resetManager(self.mgr2,SERIALPORT_MGR2)
+        
+        #=== configure and reset mgr1
+        
+        # change netid
+        self.mgr1.dn_exchangeNetworkId(
+            id = NETID_PRIMARY,
         )
-
-        self.tag.dn_reset()
         
-        self.mgr2.dn_reset(
-            type       = 0,
-            macAddress = [0x00]*8,
-        )
-        time.sleep(1)              
-
-        print 'reset all networks done and wait for 45s to change network id in the motes!'
-
-        self.mgr1.disconnect()
-        self.mgr2.disconnect()
-        self.tag.disconnect()        
-
-        time.sleep(45)
-        
-        self.mgr1.connect({'port': SERIALPORT_MGR_1})
-        self.mgr2.connect({'port': SERIALPORT_MGR_2})
-        self.tag.connect({'port': SERIALPORT_TAG})
-
-        print 'connect manager 1, 2 and blink mote again done!'     
-        
-        
-        # wait for both manager 1, 2 network to form to ensure both of them don't lost any mote for next network id change
-        while True:
+        # configure ACL
+        mote_list = [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]
+        for m in mote_list:
             
-            res = self.mgr1.dn_getNetworkInfo()
-            print 'size of network as parameter: {0}, Mgr1.numMotes={1}, Mgr2.numMotes={2}'.format(networksize,res.numMotes,self.mgr2.dn_getNetworkInfo().numMotes)
-            if (res.numMotes==networksize) and (self.mgr2.dn_getNetworkInfo().numMotes == 45-networksize):
-                break
-            time.sleep(1)
-        printAndLog('BEGINEXPERIMENT', {'networksize': networksize})
-        printAndLog('MACMOTEID{}'.format(networksize), getAllMote(mgr1))
-
-        # manager 1 subscribes network information
-        print 'manager subscribes network info'
-        self.mgrsub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
-        self.mgrsub.start()
-        self.mgrsub.subscribe(
+            # log
+            printAndLog('MNGCMD', {'cmd': 'dn_setACLEntry'})
+            
+            # call 
+            self.mgr1.dn_setACLEntry(
+                macAddress   = m,
+                joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'],
+            )
+        
+        # reset manager
+        self.resetManager(self.mrg1,SERIALPORT_MGR1)
+        
+        self.mgr1sub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
+        self.mgr1sub.start()
+        self.mgr1sub.subscribe(
             notifTypes =    IpMgrSubscribe.IpMgrSubscribe.ALLNOTIF,
-            fun =           handle_mgr_notif,
+            fun =           handle_mgr1_notif,
             isRlbl =        False,
         )
-
-        # blink mote listens txDone
-        print 'blink mote tracks txDone'
-
-        mynotifListener   = NotifListener (
-                          tag,
-                          handle_mote_notif,
-                          mote_disconnection,
-                          )
-        mynotifListener.start()
-
-        print 'manager and blink heard blink now !!!'
         
-        # blink transactions, tag sends the packets
-        for t in range(100):
+        #=== wait for networksize nodes to join mgr1
+        
+        while True:
+            res = self.mgr1.dn_getNetworkInfo()
+            print 'mgr1 networkSize={0}'.format(res.numMotes)
+            if res.numMotes==networksize:
+                break
+            time.sleep(1)
+        
+        #=== move mrg2 to NETID_PRIMARY
+        
+        # change netid
+        self.mgr2.exchangeNetworkId(
+            id = NETID_PRIMARY,
+        )
+        
+        # reset manager
+        self.resetManager(self.mrg2,SERIALPORT_MGR2)
+        
+        #=== wait for len(ALLMOTES)-networksize nodes to join mgr2
+        
+        while True:
+            res = self.mgr2.dn_getNetworkInfo()
+            print 'mgr2 networkSize={0}'.format(res.numMotes)
+            if res.numMotes==len(ALLMOTES)-networksize:
+                break
+            time.sleep(1)
+        
+        #=== move motes now attached to mgr2 to NETID_SECONDARY
+        
+        self.mgr2.dn_exchangeNetworkId(
+            id = NETID_SECONDARY,
+        )
+        time.sleep(120) # worst duration for dn_exchangeNetworkId to take effect
+        
+        # reset manager
+        self.resetManager(self.mrg2,SERIALPORT_MGR2)
+        
+        # when you get here:
+        # - networksize               motes are attached to mgr1
+        # - len(ALLMOTES)-networksize motes are attached to mgr2
+        
+        #=== retrieve moteId/macAddress correspondance on mgr1
+        
+        # TODO
+        
+        #===== step 1. issue blink commands
+        
+        # blink transactions
+        for t in range(10):
             
             # blink packets
             for p in range(10):
-                print 'send packet {0} of transaction {1}'.format(p,t)
-                try:
-                    payLoadBlink = 'Size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
-                    res = self.tag.dn_blink(
-                        fIncludeDscvNbrs = 1,
-                        payload          = [ord(i) for i in payLoadBlink],
-                    )
-                    printAndLog('BLINKISSUE', payLoadBlink)
-                    print 'blink request packet {}'.format(payLoadBlink)
-                except Exception as err:
-                    print 'could not send blink packet: {0}\n'.format(err)
                 
-                print "...waiting for packet sent notification \n",
-
-                while not NotifEventDone.is_set():
-                    print '!',
-                    time.sleep(1)
-                NotifEventDone.clear()
-            # reset tag after 10 packets
+                print 'send packet {0} of transaction {1}'.format(p,t)
+                self.tag.dn_blink(
+                    fIncludeDscvNbrs = 1,
+                    payload          = [t,p],
+                )
+                
+                time.sleep(5) # TODO wait for response
+                
+            # reset tag
+            print 'self.tag.dn_reset()'
             self.tag.dn_reset()
-            time.sleep(1)              
-            self.tag.disconnect()
-            time.sleep(45)
-            self.tag.connect({'port': SERIALPORT_TAG})
-
-        printAndLog('ENDEXPERIMENT', {'networksize': networksize})
-
-# Motes listen TxDone
-class NotifListener(threading.Thread):
     
-    def __init__(self,connector,notifCb,disconnectedCb):
-    
-        # record variables
-        self.connector       = connector
-        self.notifCb         = notifCb
-        self.disconnectedCb  = disconnectedCb
-        
-        # init the parent
-        threading.Thread.__init__(self)
-        
-        # give this thread a name
-        self.name            = 'NotifListener'
-        
-    #======================== public ==========================================
-    
-    def run(self):
-        keepListening = True
-        while keepListening:
-            try:
-                input = self.connector.getNotificationInternal(-1)
-            except (ConnectionError,QueueError) as err:
-                keepListening = False
-            else:
-                if input:
-                    self.notifCb(input)
-                else:
-                    keepListening = False
-        self.disconnectedCb()
-
+    def resetManager(self,mgr,serialport):
+        print 'mgr.dn_reset'
+        mgr.dn_reset(
+            type       = 0, # reset system: type = 0, reset specific motes: type= 2
+            macAddress = [0x00]*8,
+        )
+        print 'mgr.disconnect()'
+        mgr.disconnect()
+        time.sleep(30)
+        print 'mgr.connect()'
+        mgr.connect({'port': serialport})
 
 #============================ main ============================================
 
 def main():
     blinklab = BlinkLab()
     blinklab.join()
-    mgr1.disconnect()
-    mgr2.disconnect()
-    tag.disconnect()
     raw_input("Script ended successfully. Press Enter to close.")
 
 if __name__=="__main__":
     main()
-
