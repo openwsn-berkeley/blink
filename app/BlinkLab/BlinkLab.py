@@ -115,28 +115,31 @@ class BlinkLab(threading.Thread):
         
         #=== move mgr2 to NETID_SECONDARY
         
-		res = self.mgr2.dn_getNetworkConfig()
-		self.mgr2.dn_setNetworkConfig(
-		    networkId    	= NETID_SECONDARY,
-			apTxPower    	= res.apTxPower,
-			frameProfile 	= res.frameProfile,
-			maxMotes     	= res.maxMotes, 
-			baseBandwidth 	= res.baseBandwidth, 
-			downFrameMultVal = res.downFrameMultVal, 
-			numParents 		= res.numParents, 
-			ccaMode 		= res.ccaMode, 
-			channelList 	= res.channelList, 
-			autoStartNetwork = res.autoStartNetwork, 
-			locMode 		= res.locMode, 
-			bbMode 			= res.bbMode, 
-			bbSize 			= res.bbSize, 
-			isRadioTest 	= res.isRadioTest, 
-			bwMult 			= res.bwMult, 
-			oneChannel 		= res.oneChannel
-		)
+        printAndLog('move mgr2 to NETID_SECONDARY', '')
+        res = self.mgr2.dn_getNetworkConfig()
+        self.mgr2.dn_setNetworkConfig(
+            networkId        = NETID_SECONDARY, # changed
+            apTxPower        = res.apTxPower,
+            frameProfile     = res.frameProfile,
+            maxMotes         = res.maxMotes, 
+            baseBandwidth    = res.baseBandwidth, 
+            downFrameMultVal = res.downFrameMultVal, 
+            numParents       = res.numParents, 
+            ccaMode          = res.ccaMode, 
+            channelList      = res.channelList, 
+            autoStartNetwork = res.autoStartNetwork, 
+            locMode          = res.locMode, 
+            bbMode           = res.bbMode, 
+            bbSize           = res.bbSize, 
+            isRadioTest      = res.isRadioTest, 
+            bwMult           = res.bwMult, 
+            oneChannel       = res.oneChannel
+        )
         self.resetManager(self.mgr2,SERIALPORT_MGR2)
         
         #=== configure and reset mgr1
+        
+        printAndLog('configure and reset mgr1', '')
         
         # change netid
         self.mgr1.dn_exchangeNetworkId(
@@ -176,15 +179,29 @@ class BlinkLab(threading.Thread):
                 break
             time.sleep(1)
         
-        #=== move mrg2 to NETID_PRIMARY
+        #=== move mgr2 to NETID_PRIMARY
         
-        # change netid
-        self.mgr2.dn_exchangeNetworkId(
-            id = NETID_PRIMARY,
+        printAndLog('move mgr2 to NETID_PRIMARY', '')
+        res = self.mgr2.dn_getNetworkConfig()
+        self.mgr2.dn_setNetworkConfig(
+            networkId        = NETID_PRIMARY, # changed
+            apTxPower        = res.apTxPower,
+            frameProfile     = res.frameProfile,
+            maxMotes         = res.maxMotes, 
+            baseBandwidth    = res.baseBandwidth, 
+            downFrameMultVal = res.downFrameMultVal, 
+            numParents       = res.numParents, 
+            ccaMode          = res.ccaMode, 
+            channelList      = res.channelList, 
+            autoStartNetwork = res.autoStartNetwork, 
+            locMode          = res.locMode, 
+            bbMode           = res.bbMode, 
+            bbSize           = res.bbSize, 
+            isRadioTest      = res.isRadioTest, 
+            bwMult           = res.bwMult, 
+            oneChannel       = res.oneChannel
         )
-        
-        # reset manager
-        self.resetManager(self.mrg2,SERIALPORT_MGR2)
+        self.resetManager(self.mgr2,SERIALPORT_MGR2)
         
         #=== wait for len(ALLMOTES)-networksize nodes to join mgr2
         
@@ -201,9 +218,7 @@ class BlinkLab(threading.Thread):
             id = NETID_SECONDARY,
         )
         time.sleep(120) # worst duration for dn_exchangeNetworkId to take effect
-        
-        # reset manager
-        self.resetManager(self.mrg2,SERIALPORT_MGR2)
+        self.resetManager(self.mgr2,SERIALPORT_MGR2)
         
         # when you get here:
         # - networksize               motes are attached to mgr1
@@ -212,7 +227,7 @@ class BlinkLab(threading.Thread):
         #=== retrieve moteId/macAddress correspondance on mgr1
         
         # TODO
-			
+            
         #===== step 1. issue blink commands
         
         # blink transactions
@@ -254,4 +269,4 @@ def main():
 
 if __name__=="__main__":
     main()
-	
+    
