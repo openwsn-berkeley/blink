@@ -140,6 +140,7 @@ class BlinkLab(threading.Thread):
             SERIALPORT_MGR1: None,
             SERIALPORT_MGR2: None,
         }
+        self.previousNetworkSize       = None
         
         # connect and subscribe to manager1
         self.mgr[SERIALPORT_MGR1] = IpMgrConnectorSerial.IpMgrConnectorSerial()
@@ -206,14 +207,15 @@ class BlinkLab(threading.Thread):
         
         self.change_networkid_manager_and_reset(SERIALPORT_MGR2, NETID_EXPERIMENT)
         
-        #=== wait for len(ALLMOTES)-networksize nodes to join MGR2
+        #=== wait for nodes that couldn't join MRG1 to join MGR2
         
         while True:
             res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
-            if   networksize==len(ALLMOTES):
+            if self.previousNetworkSize==None
                 numMotesToMoveToParked = 0
             else:
-                numMotesToMoveToParked = STEP
+                numMotesToMoveToParked = self.previousNetworkSize-networksize
+            self.previousNetworkSize = networksize
             if res.numMotes==numMotesToMoveToParked:
                 break
             time.sleep(1)
