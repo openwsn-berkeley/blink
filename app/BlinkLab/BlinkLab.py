@@ -207,15 +207,15 @@ class BlinkLab(threading.Thread):
         
         self.change_networkid_manager_and_reset(SERIALPORT_MGR2, NETID_EXPERIMENT)
         
-        #=== wait for nodes that couldn't join MRG1 to join MGR2
+        #=== wait for nodes that couldn't join MGR1 to join MGR2
         
+        if self.previousNetworkSize == None:
+            numMotesToMoveToParked = 0
+        else:
+            numMotesToMoveToParked = self.previousNetworkSize-networksize
+        self.previousNetworkSize = networksize
         while True:
             res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
-            if self.previousNetworkSize==None
-                numMotesToMoveToParked = 0
-            else:
-                numMotesToMoveToParked = self.previousNetworkSize-networksize
-            self.previousNetworkSize = networksize
             if res.numMotes==numMotesToMoveToParked:
                 break
             time.sleep(1)
