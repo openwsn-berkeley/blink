@@ -36,53 +36,12 @@ SERIALPORT_TAG          = 'COM11'
 
 TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xc6,0xa1,
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xd1,0x70,
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xc2,0xf9, 
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xcb,0xe5 ,
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xd5,0x1f ,
-    0x00,0x17,0x0d,0x00,0x00,0x31,0xd5,0x01 ,
-    #[0, 23, 13, 0, 0, 49, 201, 230], 
-    #[0, 23, 13, 0, 0, 49, 202, 3], 
-    #[0, 23, 13, 0, 0, 49, 209, 95], 
-    #[0, 23, 13, 0, 0, 49, 213, 103], 
-    #[0, 23, 13, 0, 0, 49, 213, 106], 
-    #[0, 23, 13, 0, 0, 49, 213, 48], 
-    #[0, 23, 13, 0, 0, 49, 202, 5], 
-    #[0, 23, 13, 0, 0, 49, 204, 46], 
-    #[0, 23, 13, 0, 0, 49, 193, 161], 
-    #[0, 23, 13, 0, 0, 49, 209, 112], 
-    #[0, 23, 13, 0, 0, 49, 213, 1], 
-    #[0, 23, 13, 0, 0, 49, 204, 64], 
-    #[0, 23, 13, 0, 0, 49, 199, 176], 
-    #[0, 23, 13, 0, 0, 49, 201, 241], 
-    #[0, 23, 13, 0, 0, 49, 213, 32], 
-    #[0, 23, 13, 0, 0, 49, 209, 172], 
-    #[0, 23, 13, 0, 0, 49, 198, 184], 
-    #[0, 23, 13, 0, 0, 49, 195, 55], 
-    #[0, 23, 13, 0, 0, 49, 194, 249], 
-    #[0, 23, 13, 0, 0, 49, 204, 88], 
-    #[0, 23, 13, 0, 0, 49, 195, 83], 
-    #[0, 23, 13, 0, 0, 49, 203, 229], 
-    #[0, 23, 13, 0, 0, 49, 209, 50], 
-    #[0, 23, 13, 0, 0, 49, 193, 160], 
-    #[0, 23, 13, 0, 0, 49, 212, 126], 
-    #[0, 23, 13, 0, 0, 49, 195, 113], 
-    #[0, 23, 13, 0, 0, 49, 209, 211], 
-    #[0, 23, 13, 0, 0, 49, 193, 193], 
-    #[0, 23, 13, 0, 0, 49, 195, 62], 
-    #[0, 23, 13, 0, 0, 49, 213, 31], 
-    #[0, 23, 13, 0, 0, 49, 209, 168], 
-    #[0, 23, 13, 0, 0, 49, 195, 25], 
-    #[0, 23, 13, 0, 0, 49, 199, 222], 
-    #[0, 23, 13, 0, 0, 49, 203, 231], 
-    #[0, 23, 13, 0, 0, 49, 204, 89], 
-    #[0, 23, 13, 0, 0, 49, 198, 146], 
-    #[0, 23, 13, 0, 0, 49, 213, 105], 
-    #[0, 23, 13, 0, 0, 49, 199, 219], 
-    #[0, 23, 13, 0, 0, 49, 213, 134], 
-    #[0, 23, 13, 0, 0, 49, 213, 50], 
-    #[0, 23, 13, 0, 0, 49, 195, 10],
+    [0, 23, 13, 0, 0, 49, 198, 161],
+    [0, 23, 13, 0, 0, 49, 213, 31], 
+    [0, 23, 13, 0, 0, 49, 203, 229],
+    [0, 23, 13, 0, 0, 49, 194, 249],
+    [0, 23, 13, 0, 0, 49, 209, 112],
+    [0, 23, 13, 0, 0, 49, 213, 1],
 ]
 
 #============================ helpers =========================================
@@ -156,12 +115,25 @@ class BlinkLab(threading.Thread):
         
         #=== move mgr2 to NETID_SECONDARY
         
-        # change netid
-        self.mgr2.dn_exchangeNetworkId(
-            id = NETID_SECONDARY,
-        )
-        
-        # reset manager
+		res = self.mgr2.dn_getNetworkConfig()
+		self.mgr2.dn_setNetworkConfig(
+		    networkId    	= NETID_SECONDARY,
+			apTxPower    	= res.apTxPower,
+			frameProfile 	= res.frameProfile,
+			maxMotes     	= res.maxMotes, 
+			baseBandwidth 	= res.baseBandwidth, 
+			downFrameMultVal = res.downFrameMultVal, 
+			numParents 		= res.numParents, 
+			ccaMode 		= res.ccaMode, 
+			channelList 	= res.channelList, 
+			autoStartNetwork = res.autoStartNetwork, 
+			locMode 		= res.locMode, 
+			bbMode 			= res.bbMode, 
+			bbSize 			= res.bbSize, 
+			isRadioTest 	= res.isRadioTest, 
+			bwMult 			= res.bwMult, 
+			oneChannel 		= res.oneChannel
+		)
         self.resetManager(self.mgr2,SERIALPORT_MGR2)
         
         #=== configure and reset mgr1
@@ -185,7 +157,7 @@ class BlinkLab(threading.Thread):
             )
         
         # reset manager
-        self.resetManager(self.mrg1,SERIALPORT_MGR1)
+        self.resetManager(self.mgr1,SERIALPORT_MGR1)
         
         self.mgr1sub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
         self.mgr1sub.start()
@@ -207,7 +179,7 @@ class BlinkLab(threading.Thread):
         #=== move mrg2 to NETID_PRIMARY
         
         # change netid
-        self.mgr2.exchangeNetworkId(
+        self.mgr2.dn_exchangeNetworkId(
             id = NETID_PRIMARY,
         )
         
@@ -240,7 +212,7 @@ class BlinkLab(threading.Thread):
         #=== retrieve moteId/macAddress correspondance on mgr1
         
         # TODO
-        
+			
         #===== step 1. issue blink commands
         
         # blink transactions
@@ -282,3 +254,4 @@ def main():
 
 if __name__=="__main__":
     main()
+	
