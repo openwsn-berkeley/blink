@@ -27,8 +27,9 @@ from SmartMeshSDK.IpMgrConnectorMux     import IpMgrSubscribe
 
 #============================ defines =========================================
 
-NETID_PRIMARY           = 601
-NETID_SECONDARY         = 602
+NETID_EXPERIMENT        = 601
+NETID_HIDING            = 602
+NETID_PARKED            = 603
 
 SERIALPORT_MGR1         = 'COM7'
 SERIALPORT_MGR2         = 'COM15'
@@ -44,13 +45,39 @@ ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 213, 1],
 ]
 
+TIMEOUT_EXCHANGENETID   = 120
+TIMEOUT_RESETMGRID      = 30
+
 #============================ helpers =========================================
 
 fileLock = threading.RLock() 
 
 def printAndLog(msg_type, msg, firstline = False):
     global fileLock
-    print msg_type, msg
+    
+    # print
+    
+    output = []
+    if msg_type=='CMD':
+        if   msg['serialport']==SERIALPORT_MGR1:
+            mgr = 'MGR1'
+        elif msg['serialport']==SERIALPORT_MGR2:
+            mgr = 'MGR2'
+        if   msg['cmd']=='dn_exchangeNetworkId':
+            notes = 'networkId={0}'.format(msg['params']['id'])
+        elif msg['cmd']=='dn_setNetworkConfig':
+            notes = 'networkId={0}'.format(msg['params']['networkId'])
+        elif msg['cmd']=='dn_getNeworkInfo':
+            notes = 'numMotes={0}'.format(msg['res']['numMotes'])
+        else:
+            notes = ''
+        output += ['{0} {1} {2} {3}'.format(msg_type, mgr, msg['cmd'], notes)]
+    else:
+        output += ['{0} {1}'.format(msg_type,msg)]
+    output = '\n'.join(output)
+    print output
+    
+    # log
     if firstline:
         filemode = 'w'
     else:
@@ -67,7 +94,7 @@ def printAndLog(msg_type, msg, firstline = False):
     
 def handle_mgr1_notif(notifName, notifParams):
     try:
-        printAndLog('MGNNOTIF', {'notifName': notifName, 'notifParams': notifParams})
+        printAndLog('NOTIF', {'notifName': notifName, 'notifParams': notifParams})
     except Exception as err:
         print err
 
@@ -89,13 +116,15 @@ class BlinkLab(threading.Thread):
     
     def run(self):
         
+        self.mgr = {}
+        
         # connect to manager1
-        self.mgr1 = IpMgrConnectorSerial.IpMgrConnectorSerial()
-        self.mgr1.connect({'port': SERIALPORT_MGR1})
+        self.mgr[SERIALPORT_MGR1] = IpMgrConnectorSerial.IpMgrConnectorSerial()
+        self.mgr[SERIALPORT_MGR1].connect({'port': SERIALPORT_MGR1})
         
         # connect to manager2
-        self.mgr2 = IpMgrConnectorSerial.IpMgrConnectorSerial()
-        self.mgr2.connect({'port': SERIALPORT_MGR2})
+        self.mgr[SERIALPORT_MGR2] = IpMgrConnectorSerial.IpMgrConnectorSerial()
+        self.mgr[SERIALPORT_MGR2].connect({'port': SERIALPORT_MGR2})
         
         # connect to tag
         self.tag = IpMoteConnector.IpMoteConnector()
@@ -109,59 +138,28 @@ class BlinkLab(threading.Thread):
     def runExperimentForSize(self,networksize):
         
         # log
-        printAndLog('NEWNETWORKSIZE', {'networksize': networksize})
+        printAndLog('NETWORKSIZE', {'networksize': networksize})
         
         #===== step 1. prepare network
         
-        #=== move mgr2 to NETID_SECONDARY
+        #=== MGR2 -> NETID_PARKED
         
-        printAndLog('move mgr2 to NETID_SECONDARY', '')
-        res = self.mgr2.dn_getNetworkConfig()
-        self.mgr2.dn_setNetworkConfig(
-            networkId        = NETID_SECONDARY, # changed
-            apTxPower        = res.apTxPower,
-            frameProfile     = res.frameProfile,
-            maxMotes         = res.maxMotes, 
-            baseBandwidth    = res.baseBandwidth, 
-            downFrameMultVal = res.downFrameMultVal, 
-            numParents       = res.numParents, 
-            ccaMode          = res.ccaMode, 
-            channelList      = res.channelList, 
-            autoStartNetwork = res.autoStartNetwork, 
-            locMode          = res.locMode, 
-            bbMode           = res.bbMode, 
-            bbSize           = res.bbSize, 
-            isRadioTest      = res.isRadioTest, 
-            bwMult           = res.bwMult, 
-            oneChannel       = res.oneChannel
-        )
-        self.resetManager(self.mgr2,SERIALPORT_MGR2)
+        self.change_networkid_manager_and_reset(SERIALPORT_MGR2,NETID_PARKED)
         
-        #=== configure and reset mgr1
+        #=== configure and reset MGR1
         
-        printAndLog('configure and reset mgr1', '')
+        # clear ACL
+        self.issue_manager_command(SERIALPORT_MGR1,"dn_deleteACLEntry", {"macAddress": [0x00]*8})
         
-        # change netid
-        self.mgr1.dn_exchangeNetworkId(
-            id = NETID_PRIMARY,
-        )
+        # add ACL entries
+        for m in [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]:
+            self.issue_manager_command(SERIALPORT_MGR1,"dn_setACLEntry", {"macAddress": m, "joinKey": [ord(b) for b in 'DUSTNETWORKSROCK']})
         
-        # configure ACL
-        mote_list = [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]
-        for m in mote_list:
-            
-            # log
-            printAndLog('MNGCMD', {'cmd': 'dn_setACLEntry'})
-            
-            # call 
-            self.mgr1.dn_setACLEntry(
-                macAddress   = m,
-                joinKey      = [ord(b) for b in 'DUSTNETWORKSROCK'],
-            )
+        # MGR1 -> NETID_EXPERIMENT
+        self.change_networkid_manager_and_reset(SERIALPORT_MGR1,NETID_EXPERIMENT)
         
-        # reset manager
-        self.resetManager(self.mgr1,SERIALPORT_MGR1)
-        
+        # subscribe to notifications
+        '''
         self.mgr1sub = IpMgrSubscribe.IpMgrSubscribe(self.mgr1)
         self.mgr1sub.start()
         self.mgr1sub.subscribe(
@@ -169,75 +167,73 @@ class BlinkLab(threading.Thread):
             fun =           handle_mgr1_notif,
             isRlbl =        False,
         )
+        '''
         
-        #=== wait for networksize nodes to join mgr1
+        #=== wait for networksize nodes to join MGR1
         
         while True:
-            res = self.mgr1.dn_getNetworkInfo()
-            print 'mgr1 networkSize={0}'.format(res.numMotes)
+            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
             if res.numMotes==networksize:
                 break
             time.sleep(1)
         
-        #=== move mgr2 to NETID_PRIMARY
+        #=== MGR1 (+network) -> NETID_HIDING
         
-        printAndLog('move mgr2 to NETID_PRIMARY', '')
-        res = self.mgr2.dn_getNetworkConfig()
-        self.mgr2.dn_setNetworkConfig(
-            networkId        = NETID_PRIMARY, # changed
-            apTxPower        = res.apTxPower,
-            frameProfile     = res.frameProfile,
-            maxMotes         = res.maxMotes, 
-            baseBandwidth    = res.baseBandwidth, 
-            downFrameMultVal = res.downFrameMultVal, 
-            numParents       = res.numParents, 
-            ccaMode          = res.ccaMode, 
-            channelList      = res.channelList, 
-            autoStartNetwork = res.autoStartNetwork, 
-            locMode          = res.locMode, 
-            bbMode           = res.bbMode, 
-            bbSize           = res.bbSize, 
-            isRadioTest      = res.isRadioTest, 
-            bwMult           = res.bwMult, 
-            oneChannel       = res.oneChannel
-        )
-        self.resetManager(self.mgr2,SERIALPORT_MGR2)
+        self.change_networkid_network_and_reset(SERIALPORT_MGR1,NETID_HIDING)
         
-        #=== wait for len(ALLMOTES)-networksize nodes to join mgr2
+        #=== MGR2 -> NETID_EXPERIMENT
+        
+        self.change_networkid_manager_and_reset(SERIALPORT_MGR2, NETID_EXPERIMENT)
+        
+        #=== wait for len(ALLMOTES)-networksize nodes to join MGR2
         
         while True:
-            res = self.mgr2.dn_getNetworkInfo()
-            print 'mgr2 networkSize={0}'.format(res.numMotes)
+            res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo") 
             if res.numMotes==len(ALLMOTES)-networksize:
                 break
             time.sleep(1)
         
-        #=== move motes now attached to mgr2 to NETID_SECONDARY
+        #=== MGR2 (+network) -> NETID_PARKED
         
-        self.mgr2.dn_exchangeNetworkId(
-            id = NETID_SECONDARY,
-        )
-        time.sleep(120) # worst duration for dn_exchangeNetworkId to take effect
-        self.resetManager(self.mgr2,SERIALPORT_MGR2)
+        self.change_networkid_network_and_reset(SERIALPORT_MGR2,NETID_PARKED)
+        
+        #=== MGR1 (+network) -> NETID_EXPERIMENT
+        
+        self.change_networkid_network_and_reset(SERIALPORT_MGR1,NETID_EXPERIMENT)
+        
+        #=== wait for networksize nodes to join MGR1
+        
+        while True:
+            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
+            if res.numMotes==networksize:
+                break
+            time.sleep(1)
         
         # when you get here:
-        # - networksize               motes are attached to mgr1
-        # - len(ALLMOTES)-networksize motes are attached to mgr2
+        # - networksize               motes are attached to MGR1
+        # - len(ALLMOTES)-networksize motes are attached to MGR2
         
-        #=== retrieve moteId/macAddress correspondance on mgr1
+        #=== retrieve moteId/macAddress correspondance on MGR1
         
         # TODO
-            
+        
+        raw_input(
+            "\nWe should have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
+                networksize,
+                len(ALLMOTES)-networksize,
+            )
+        )
+        
         #===== step 1. issue blink commands
         
+        '''
         # blink transactions
         for t in range(10):
             
             # blink packets
             for p in range(10):
                 
-                print 'send packet {0} of transaction {1}'.format(p,t)
-                self.tag.dn_blink(
+                resp = self.tag.dn_blink(
                     fIncludeDscvNbrs = 1,
                     payload          = [t,p],
                 )
@@ -245,20 +241,74 @@ class BlinkLab(threading.Thread):
                 time.sleep(5) # TODO wait for response
                 
             # reset tag
-            print 'self.tag.dn_reset()'
             self.tag.dn_reset()
+        '''
     
-    def resetManager(self,mgr,serialport):
-        print 'mgr.dn_reset'
-        mgr.dn_reset(
-            type       = 0, # reset system: type = 0, reset specific motes: type= 2
-            macAddress = [0x00]*8,
+    def issue_manager_command(self,serialport,cmd,params=None):
+        
+        # issue
+        if   params:
+            res = getattr(self.mgr[serialport],cmd)(**params)
+        else:
+            res = getattr(self.mgr[serialport],cmd)()
+        
+        # log
+        printAndLog('CMD',
+            {
+                "serialport":     serialport,
+                "cmd":            cmd,
+                "params":         params,
+                "res":            res,
+            }
         )
-        print 'mgr.disconnect()'
-        mgr.disconnect()
-        time.sleep(30)
-        print 'mgr.connect()'
-        mgr.connect({'port': serialport})
+        
+        return res
+    
+    def change_networkid_manager_and_reset(self, serialport, newnetid):
+        
+        # retrieve the current configuration
+        res = self.issue_manager_command(serialport,"dn_getNetworkConfig")
+        
+        # set new configuration
+        self.issue_manager_command(serialport,"dn_setNetworkConfig",
+            {
+                "networkId"            : newnetid, # changed
+                "apTxPower"            : res.apTxPower,
+                "frameProfile"         : res.frameProfile,
+                "maxMotes"             : res.maxMotes, 
+                "baseBandwidth"        : res.baseBandwidth, 
+                "downFrameMultVal"     : res.downFrameMultVal, 
+                "numParents"           : res.numParents, 
+                "ccaMode"              : res.ccaMode, 
+                "channelList"          : res.channelList, 
+                "autoStartNetwork"     : res.autoStartNetwork, 
+                "locMode"              : res.locMode, 
+                "bbMode"               : res.bbMode, 
+                "bbSize"               : res.bbSize, 
+                "isRadioTest"          : res.isRadioTest, 
+                "bwMult"               : res.bwMult, 
+                "oneChannel"           : res.oneChannel
+            }
+        )
+        
+        # reset
+        self.resetManager(serialport)
+    
+    def change_networkid_network_and_reset(self, serialport, newnetid):
+        self.issue_manager_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
+        time.sleep(TIMEOUT_EXCHANGENETID) # worst duration for dn_exchangeNetworkId to take effect
+        self.resetManager(serialport)
+    
+    def resetManager(self,serialport):
+        self.issue_manager_command(serialport,"dn_reset",
+            {
+                "type"                 : 0, # reset system: type = 0, reset specific motes: type= 2
+                "macAddress"           : [0x00]*8,
+            }
+        )
+        self.mgr[serialport].disconnect()
+        time.sleep(TIMEOUT_RESETMGRID)
+        self.mgr[serialport].connect({'port': serialport})
 
 #============================ main ============================================
 
