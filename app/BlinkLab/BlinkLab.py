@@ -88,7 +88,7 @@ def printAndLog(msg_type, msg, firstline = False):
     else:
         filemode = 'a'
     with fileLock:
-        with open('blinkLlab.txt', filemode) as f:
+        with open('blinkLab.txt', filemode) as f:
             f.write(
                 json.dumps({
                     'timestamp': time.time(),
