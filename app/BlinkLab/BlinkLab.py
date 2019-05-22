@@ -39,12 +39,23 @@ SERIALPORT_TAG          = 'COM11'
 
 TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
-    [0, 23, 13, 0, 0, 49, 198, 161],
-    [0, 23, 13, 0, 0, 49, 213, 31], 
+    
+    [0, 23, 13, 0, 0, 49, 195, 83],
+    [0, 23, 13, 0, 0, 49, 209, 172],
+    [0, 23, 13, 0, 0, 49, 204, 64],
+    [0, 23, 13, 0, 0, 49, 201, 241],
+    [0, 23, 13, 0, 0, 49, 199, 222],
     [0, 23, 13, 0, 0, 49, 194, 249],
-    [0, 23, 13, 0, 0, 49, 213, 1],
+    [0, 23, 13, 0, 0, 49, 193, 193],
+    [0, 23, 13, 0, 0, 49, 209, 112],
+    [0, 23, 13, 0, 0, 49, 195, 55],
+    
+    
+    
+
 ]
-STEP                    = 2
+STEP                    = 3
+END                     = -1
 
 TIMEOUT_RESETMGRID      = 30
 
@@ -156,7 +167,7 @@ class BlinkLab(threading.Thread):
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        for networksize in range(4,-1,-STEP):
+        for networksize in range(len(ALLMOTES), END, -STEP):
             self.runExperimentForSize(networksize)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
@@ -240,7 +251,8 @@ class BlinkLab(threading.Thread):
         
         while True:
             res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
-            if res.numMotes==networksize:
+            res2 = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
+            if (res.numMotes==networksize and res2.numMotes == len(ALLMOTES)-networksize):
                 break
             time.sleep(1)
         
