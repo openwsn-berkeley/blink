@@ -40,21 +40,58 @@ SERIALPORT_TAG          = 'COM11'
 TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
     
-    [0, 23, 13, 0, 0, 49, 195, 83],
-    [0, 23, 13, 0, 0, 49, 209, 172],
-    [0, 23, 13, 0, 0, 49, 204, 64],
+    [0, 23, 13, 0, 0, 49, 213, 106],
+    [0, 23, 13, 0, 0, 49, 198, 161],
     [0, 23, 13, 0, 0, 49, 201, 241],
-    [0, 23, 13, 0, 0, 49, 199, 222],
-    [0, 23, 13, 0, 0, 49, 194, 249],
+    [0, 23, 13, 0, 0, 49, 195, 113],
     [0, 23, 13, 0, 0, 49, 193, 193],
-    [0, 23, 13, 0, 0, 49, 209, 112],
+    [0, 23, 13, 0, 0, 49, 202, 3],
+    [0, 23, 13, 0, 0, 49, 201, 230],
+    [0, 23, 13, 0, 0, 49, 213, 48],
+    [0, 23, 13, 0, 0, 49, 213, 31],
+    [0, 23, 13, 0, 0, 49, 195, 25],
+    [0, 23, 13, 0, 0, 49, 204, 89],
+    [0, 23, 13, 0, 0, 49, 213, 105],
+    [0, 23, 13, 0, 0, 49, 193, 171],
+    [0, 23, 13, 0, 0, 49, 213, 103],
+    [0, 23, 13, 0, 0, 49, 193, 160],
+    [0, 23, 13, 0, 0, 49, 198, 146],
+    [0, 23, 13, 0, 0, 49, 209, 50],
+    [0, 23, 13, 0, 0, 49, 209, 95],
+    [0, 23, 13, 0, 0, 49, 195, 83],
+    [0, 23, 13, 0, 0, 49, 213, 59],
+    [0, 23, 13, 0, 0, 49, 201, 218],
+    [0, 23, 13, 0, 0, 49, 195, 62],
+    [0, 23, 13, 0, 0, 49, 202, 5],
+    [0, 23, 13, 0, 0, 49, 204, 64],
+    [0, 23, 13, 0, 0, 49, 195, 10],
+    [0, 23, 13, 0, 0, 49, 213, 50],
+    [0, 23, 13, 0, 0, 49, 203, 231],
+    [0, 23, 13, 0, 0, 49, 213, 134],
+    [0, 23, 13, 0, 0, 49, 204, 46],
+    [0, 23, 13, 0, 0, 49, 198, 184],
     [0, 23, 13, 0, 0, 49, 195, 55],
+    [0, 23, 13, 0, 0, 49, 209, 211],
+    [0, 23, 13, 0, 0, 49, 195, 71],
+    [0, 23, 13, 0, 0, 49, 199, 219],
+    [0, 23, 13, 0, 0, 49, 209, 112],
+    [0, 23, 13, 0, 0, 49, 194, 249],
+    [0, 23, 13, 0, 0, 49, 193, 161],
+    [0, 23, 13, 0, 0, 49, 213, 32],
+    [0, 23, 13, 0, 0, 49, 203, 229],
+    [0, 23, 13, 0, 0, 49, 209, 172],
+    [0, 23, 13, 0, 0, 49, 204, 88],
+    [0, 23, 13, 0, 0, 49, 209, 168],
+    [0, 23, 13, 0, 0, 49, 199, 222],
+    [0, 23, 13, 0, 0, 49, 213, 1],
+    [0, 23, 13, 0, 0, 49, 204, 15],
+
     
     
     
 
 ]
-STEP                    = 3
+STEP                    = 5
 END                     = -1
 
 TIMEOUT_RESETMGRID      = 30
@@ -273,29 +310,48 @@ class BlinkLab(threading.Thread):
         
         ##################### step 2. issue blink commands
         
-        raw_input(
-            "\nVerify you have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
-                networksize,
-                len(ALLMOTES)-networksize,
-            )
-        )
+        #raw_input(
+            #"\nVerify you have {0} motes on MGR1 and {1} motes in MGR2. Press Enter to continue.\n".format(
+                #networksize,
+                #len(ALLMOTES)-networksize,
+            #)
+        #)
         
         '''
-        # blink transactions
-        for t in range(10):
+        # blink transactions, tag sends the packets
+        for t in range(5):
             
             # blink packets
             for p in range(10):
+                print 'send packet {0} of transaction {1}'.format(p,t)
+                try:
+                    blink_payload = 'size{0}_{1}{2}_{3}'.format(networksize, p, t, time.time())
+                    res = self.tag.dn_blink(
+                        fIncludeDscvNbrs = 1,
+                        payload          = [ord(i) for i in blink_payload],
+                    )
+                    printAndLog('BLINKISSUE', blink_payload)
+                    print 'blink request packet {}'.format(blink_payload)
+                except Exception as err:
+                    print 'could not send blink packet: {0}\n'.format(err)
                 
-                resp = self.tag.dn_blink(
-                    fIncludeDscvNbrs = 1,
-                    payload          = [t,p],
-                )
-                
-                time.sleep(5) # TODO wait for response
-                
-            # reset tag
+                print "...waiting for packet sent notification \n",
+
+                while not NotifEventDone.is_set():
+                    print '!',
+                    time.sleep(1)
+                NotifEventDone.clear()
+            
+            # reset tag after 10 packets
+            
             self.tag.dn_reset()
+            time.sleep(1)              
+            self.tag.disconnect()
+            time.sleep(45)
+            self.tag.connect({'port': SERIALPORT_TAG})
+
+        printAndLog('ENDEXPERIMENT', {'networksize': networksize})
+        
         '''
     
     def issue_manager_command(self,serialport,cmd,params=None):
