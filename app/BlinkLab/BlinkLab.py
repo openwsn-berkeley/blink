@@ -96,6 +96,8 @@ END                     = -1
 
 TIMEOUT_RESETMGRID      = 30
 
+blink_flag = False
+
 #============================ helpers =========================================
 
 fileLock = threading.RLock()
@@ -146,7 +148,13 @@ def printAndLog(msg_type, msg, firstline = False):
             )
 
 def handle_mgr1_notif(notifName, notifParams):
+    global blink_flag
     BlinkLab().handle_mgr_notif(SERIALPORT_MGR1, notifName, notifParams)
+    blink_flag = False
+    if notifParams.srcPort == 61616:
+        blink_flag = True
+    else:
+        blink_flag = False
 
 def handle_mgr2_notif(notifName, notifParams):
     BlinkLab().handle_mgr_notif(SERIALPORT_MGR2, notifName, notifParams)
@@ -204,8 +212,9 @@ class BlinkLab(threading.Thread):
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        for networksize in range(len(ALLMOTES), END, -STEP):
-            self.runExperimentForSize(networksize)
+        #for networksize in range(len(ALLMOTES), END, -STEP):
+            #self.runExperimentForSize(networksize)
+        self.send_blink(0, 10, 10)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
         try:
@@ -447,7 +456,48 @@ class BlinkLab(threading.Thread):
             fun =           fun,
             isRlbl =        False,
         )
-
+    def send_blink(self, networksize, trs, pkt):
+        global blink_flag
+        idx = 0
+        # send packet with transaction
+        for t in range(trs):
+            # send packet with id
+            for p in range(pkt):
+                print 'send packet {0} of transaction {1}'.format(p,t)
+                try:
+                    blink_payload = '{0}_{1}{2}'.format(networksize, t, p)
+                    res = self.tag.dn_blink(
+                        fIncludeDscvNbrs = 1,
+                        payload          = [ord(i) for i in blink_payload],
+                    )
+                    printAndLog('BLINKISSUE', blink_payload)
+                except Exception as err:
+                    print 'could not send blink packet err: {0}'.format(err)
+                #wait for manager receives blink packet
+                
+                while not blink_flag:
+                    idx += 1
+                    print '.',
+                    time.sleep(0.1)
+                    if idx == 100: # time out when manager doesn't receive blink packet
+                        break
+                blink_flag = False
+            
+            # reset Tag after sending 10 packets
+            
+            self.tag.dn_reset()
+            time.sleep(3)
+            self.tag.disconnect()
+            time.sleep(10)
+            self.tag.connect({'port': SERIALPORT_TAG})
+        
+        # finish the experiment
+        
+        self.tag.disconnect()
+        self.mgr[SERIALPORT_MGR1].disconnect()
+        self.mgr[SERIALPORT_MGR2].disconnect()
+            
+                
 #============================ main ============================================
 
 def main():
