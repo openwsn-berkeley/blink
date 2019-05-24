@@ -1,10 +1,10 @@
+#!/usr/bin/python
+
 '''
 Starting point:
 - 2 managers
-- 45 motes set to netid=NETID1
+- 45 motes set to netid=NETID_EXPERIMENT
 '''
-
-#!/usr/bin/python
 
 #============================ adjust path =====================================
 
@@ -26,6 +26,7 @@ from SmartMeshSDK.IpMgrConnectorSerial import IpMgrConnectorSerial
 from SmartMeshSDK.IpMoteConnector      import IpMoteConnector
 from SmartMeshSDK.IpMgrConnectorMux    import IpMgrSubscribe
 from SmartMeshSDK.ApiException         import APIError
+from SmartMeshSDK.protocols.blink      import blink
 
 #============================ defines =========================================
 
@@ -39,7 +40,6 @@ SERIALPORT_TAG          = 'COM11'
 
 TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
-    
     [0, 23, 13, 0, 0, 49, 213, 106],
     [0, 23, 13, 0, 0, 49, 198, 161],
     [0, 23, 13, 0, 0, 49, 201, 241],
@@ -85,17 +85,11 @@ ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 199, 222],
     [0, 23, 13, 0, 0, 49, 213, 1],
     [0, 23, 13, 0, 0, 49, 204, 15],
-
-    
-    
-    
-
 ]
-STEP                    = 5
-END                     = -1
+NUMNODESSTEP            = 5
+NUMNODESEND             = -1
 
 TIMEOUT_RESETMGRID      = 30
-TIMEOUT_RECEIVE_BLINK   = 120
 
 #============================ helpers =========================================
 
@@ -106,6 +100,8 @@ def serialport2mgr(serialport):
         returnVal = 'MGR1'
     elif serialport==SERIALPORT_MGR2:
         returnVal = 'MGR2'
+    elif serialport==SERIALPORT_TAG:
+        returnVal = 'TAG'
     return returnVal
 
 def printAndLog(msg_type, msg, firstline = False):
@@ -190,7 +186,7 @@ class BlinkLab(threading.Thread):
             SERIALPORT_MGR2: None,
         }
         self.previousNetworkSize       = None
-        self.last_blink_payload        = False
+        self.last_blink_payload        = None
         
         # connect and subscribe to manager1
         self.mgr[SERIALPORT_MGR1] = IpMgrConnectorSerial.IpMgrConnectorSerial()
@@ -207,9 +203,9 @@ class BlinkLab(threading.Thread):
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        #for networksize in range(len(ALLMOTES), END, -STEP):
+        #for networksize in range(len(ALLMOTES), NUMNODESEND, -NUMNODESSTEP):
             #self.runExperimentForSize(networksize)
-        self.send_blink(0, 3, 10)
+        self.send_blink_transactions(0, 10, 10)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
         try:
@@ -218,8 +214,15 @@ class BlinkLab(threading.Thread):
                 with self.dataLock:
                     self.lastCommandFinished[serialport] = struct.unpack('>I',''.join([chr(b) for b in notifParams.callbackId]))[0]
             if notifName=='notifData' and notifParams.srcPort == 61616:
-                    with self.dataLock:
-                        self.last_blink_payload = True
+                    try:
+                        payload     = ''.join([chr(b) for b in notifParams.data])
+                        blinkdata,blinkneighbors = blink.decode_blink(payload)
+                    except Exception as err:
+                        print err
+                        raise
+                    else:
+                        with self.dataLock:
+                            self.last_blink_payload = blinkdata.encode('hex')
         except Exception as err:
             print err
     
@@ -239,9 +242,9 @@ class BlinkLab(threading.Thread):
         #=== configure and reset MGR1
         
         # ACL
-        self.issue_manager_command(SERIALPORT_MGR1,"dn_deleteACLEntry", {"macAddress": [0x00]*8})
+        self.issue_command(SERIALPORT_MGR1,"dn_deleteACLEntry", {"macAddress": [0x00]*8})
         for m in [TAG_EUI]+[ALLMOTES[a] for a in range(networksize)]:
-            self.issue_manager_command(SERIALPORT_MGR1,"dn_setACLEntry", {"macAddress": m, "joinKey": [ord(b) for b in 'DUSTNETWORKSROCK']})
+            self.issue_command(SERIALPORT_MGR1,"dn_setACLEntry", {"macAddress": m, "joinKey": [ord(b) for b in 'DUSTNETWORKSROCK']})
         
         # MGR1 -> NETID_EXPERIMENT
         self.change_networkid_manager_and_reset(SERIALPORT_MGR1,NETID_EXPERIMENT)
@@ -249,7 +252,7 @@ class BlinkLab(threading.Thread):
         #=== wait for networksize nodes to join MGR1
         
         while True:
-            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
+            res = self.issue_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
             if res.numMotes==networksize:
                 break
             time.sleep(1)
@@ -270,7 +273,7 @@ class BlinkLab(threading.Thread):
             numMotesToMoveToParked = self.previousNetworkSize-networksize
         self.previousNetworkSize = networksize
         while True:
-            res = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
+            res = self.issue_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
             if res.numMotes==numMotesToMoveToParked:
                 break
             time.sleep(1)
@@ -282,7 +285,7 @@ class BlinkLab(threading.Thread):
         #=== wait for networksize nodes to join MGR1 (on NETID_HIDING)
         
         while True:
-            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
+            res = self.issue_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
             if res.numMotes==networksize:
                 break
             time.sleep(1)
@@ -294,8 +297,8 @@ class BlinkLab(threading.Thread):
         #=== wait for networksize nodes to join MGR1 (on NETID_EXPERIMENT)
         
         while True:
-            res = self.issue_manager_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
-            res2 = self.issue_manager_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
+            res = self.issue_command(SERIALPORT_MGR1,"dn_getNetworkInfo")
+            res2 = self.issue_command(SERIALPORT_MGR2,"dn_getNetworkInfo")
             if (res.numMotes==networksize and res2.numMotes == len(ALLMOTES)-networksize):
                 break
             time.sleep(1)
@@ -309,21 +312,31 @@ class BlinkLab(threading.Thread):
         currentMac      = (0,0,0,0,0,0,0,0) 
         while True:
             try:
-                res     = self.issue_manager_command(SERIALPORT_MGR1,"dn_getMoteConfig", {"macAddress": currentMac, "next": True})
+                res     = self.issue_command(SERIALPORT_MGR1,"dn_getMoteConfig", {"macAddress": currentMac, "next": True})
             except APIError:
                 break # end of list
             else:
                 currentMac = res.macAddress
 
-        self.send_blink(networksize, 10, 10)
+        #=== send blink transaction
+        
+        self.send_blink_transactions(networksize, 10, 10)
     
-    def issue_manager_command(self,serialport,cmd,params=None):
+    def issue_command(self,serialport,cmd,params=None):
+        
+        # find device
+        if  serialport in [SERIALPORT_MGR1,SERIALPORT_MGR2]:
+            device = self.mgr[serialport]
+        elif serialport==SERIALPORT_TAG:
+            device = self.tag
+        else:
+            raise SystemError()
         
         # issue
-        if   params:
-            res = getattr(self.mgr[serialport],cmd)(**params)
+        if params:
+            res = getattr(device,cmd)(**params)
         else:
-            res = getattr(self.mgr[serialport],cmd)()
+            res = getattr(device,cmd)()
         
         # log
         printAndLog('CMD',
@@ -334,31 +347,15 @@ class BlinkLab(threading.Thread):
                 "res":            res,
             }
         )
-        
         return res
-    
-    def issue_tag_command(self,cmd,params=None):
-        if    params:
-            res = getattr(self.tag, cmd)(**params)
-        else:
-            res = getattr(self.tag, cmd)
-        # log
-        printAndLog('TAGCMD',
-            {
-                "serialport":     SERIALPORT_TAG,
-                "cmd":            cmd,
-                "params":         params,
-                "res":            res,
-            }
-        )
 
     def change_networkid_manager_and_reset(self, serialport, newnetid):
         
         # retrieve the current configuration
-        res = self.issue_manager_command(serialport,"dn_getNetworkConfig")
+        res = self.issue_command(serialport,"dn_getNetworkConfig")
         
         # set new configuration
-        self.issue_manager_command(serialport,"dn_setNetworkConfig",
+        self.issue_command(serialport,"dn_setNetworkConfig",
             {
                 "networkId"            : newnetid, # changed
                 "apTxPower"            : res.apTxPower,
@@ -383,7 +380,7 @@ class BlinkLab(threading.Thread):
         self.resetManager(serialport)
     
     def change_networkid_network_and_reset(self, serialport, newnetid):
-        res = self.issue_manager_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
+        res = self.issue_command(serialport,"dn_exchangeNetworkId", {"id": newnetid})
         while True:
             with self.dataLock:
                 if self.lastCommandFinished[serialport]==res.callbackId:
@@ -394,7 +391,7 @@ class BlinkLab(threading.Thread):
     def resetManager(self,serialport):
     
         # issue system reset command
-        self.issue_manager_command(serialport,"dn_reset",
+        self.issue_command(serialport,"dn_reset",
             {
                 "type"                 : 0, # reset system: type = 0, reset specific motes: type= 2
                 "macAddress"           : [0x00]*8,
@@ -405,6 +402,7 @@ class BlinkLab(threading.Thread):
         # clear the lastCommandFinished for that manager
         with self.dataLock:
             self.lastCommandFinished[serialport] = None
+            self.last_blink_payload              = False
         
         # wait for motes to disconnect
         time.sleep(TIMEOUT_RESETMGRID)
@@ -426,32 +424,26 @@ class BlinkLab(threading.Thread):
             isRlbl =        False,
         )
     
-    def send_blink(self, networksize, trs, pkt):
+    def send_blink_transactions(self, networksize, num_transactions, num_packets):
         
-        for t in range(trs):
+        for t in range(num_transactions):
         
-            # send packets
-            for p in range(pkt):
-                timeout = 0
-                
-                # blink issue command
-                resp = self.issue_tag_command("dn_blink", {"fIncludeDscvNbrs":1, "payload":[networksize, t, p]})
+            for p in range(num_packets):
+                # issue blink
+                resp = self.issue_command(SERIALPORT_TAG, "dn_blink", {"fIncludeDscvNbrs": 1, "payload":[networksize, t, p]})
+                blink_payload     = ''.join([chr(b) for b in [networksize, t, p]])
                 
                 while True:
                     with self.dataLock:
-                        if self.last_blink_payload == True:
+                        if self.last_blink_payload == blink_payload.encode('hex'):
                             break
                     time.sleep(1)
-                    timeout += 1
-                    if timeout == TIMEOUT_RECEIVE_BLINK:
-                        break
-                self.last_blink_payload = False
-            
-            # reset tag after sending each 10 packets
+                    
+            # reset tag at end of each transaction
             self.tag.dn_reset()
             time.sleep(3)
             self.tag.disconnect()
-            time.sleep(10)
+            time.sleep(20)
             self.tag.connect({'port': SERIALPORT_TAG})
 
 #============================ main ============================================
@@ -463,4 +455,3 @@ def main():
 
 if __name__=="__main__":
     main()
-    
