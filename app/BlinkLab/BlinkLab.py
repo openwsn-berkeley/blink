@@ -209,7 +209,7 @@ class BlinkLab(threading.Thread):
         
         #for networksize in range(len(ALLMOTES), END, -STEP):
             #self.runExperimentForSize(networksize)
-        self.send_blink(0, 20, 10)
+        self.send_blink(0, 3, 10)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
         try:
@@ -220,7 +220,6 @@ class BlinkLab(threading.Thread):
             if notifName=='notifData' and notifParams.srcPort == 61616:
                     with self.dataLock:
                         self.last_blink_payload = True
-                        # notifParams.macAddress
         except Exception as err:
             print err
     
@@ -444,7 +443,6 @@ class BlinkLab(threading.Thread):
                             break
                     time.sleep(1)
                     timeout += 1
-                    print(timeout)
                     if timeout == TIMEOUT_RECEIVE_BLINK:
                         break
                 self.last_blink_payload = False
