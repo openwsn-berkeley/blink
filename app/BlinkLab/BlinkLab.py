@@ -86,10 +86,11 @@ ALLMOTES                = [
     [0, 23, 13, 0, 0, 49, 213, 1],
     [0, 23, 13, 0, 0, 49, 204, 15],
 ]
-NUMNODESSTEP            = 5
-NUMNODESEND             = -1
+NUMNODESSTEP              = 5
+NUMNODESEND               = -1
 
-TIMEOUT_RESETMGRID      = 30
+TIMEOUT_RESETMGRID        = 30
+TIMEOUT_DROP_BLINK_PACKET = 120
 
 #============================ helpers =========================================
 
@@ -429,6 +430,9 @@ class BlinkLab(threading.Thread):
         for t in range(num_transactions):
         
             for p in range(num_packets):
+                # update timeout, when tag can drop packet
+                timeout_drop_blink = 0
+                
                 # issue blink
                 resp = self.issue_command(SERIALPORT_TAG, "dn_blink", {"fIncludeDscvNbrs": 1, "payload":[networksize, t, p]})
                 blink_payload     = ''.join([chr(b) for b in [networksize, t, p]])
@@ -438,7 +442,10 @@ class BlinkLab(threading.Thread):
                         if self.last_blink_payload == blink_payload.encode('hex'):
                             break
                     time.sleep(1)
-                    
+                    timeout_drop_blink += 1
+                    if timeout_drop_blink == TIMEOUT_DROP_BLINK_PACKET:
+                        break
+
             # reset tag at end of each transaction
             self.tag.dn_reset()
             time.sleep(3)
