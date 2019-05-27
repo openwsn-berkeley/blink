@@ -40,56 +40,16 @@ SERIALPORT_TAG          = 'COM11'
 
 TAG_EUI                 = [0, 23, 13, 0, 0, 56, 7, 12]
 ALLMOTES                = [
-    [0, 23, 13, 0, 0, 49, 213, 106],
-    [0, 23, 13, 0, 0, 49, 198, 161],
-    [0, 23, 13, 0, 0, 49, 201, 241],
-    [0, 23, 13, 0, 0, 49, 195, 113],
-    [0, 23, 13, 0, 0, 49, 193, 193],
-    [0, 23, 13, 0, 0, 49, 202, 3],
-    [0, 23, 13, 0, 0, 49, 201, 230],
-    [0, 23, 13, 0, 0, 49, 213, 48],
-    [0, 23, 13, 0, 0, 49, 213, 31],
-    [0, 23, 13, 0, 0, 49, 195, 25],
-    [0, 23, 13, 0, 0, 49, 204, 89],
-    [0, 23, 13, 0, 0, 49, 213, 105],
-    [0, 23, 13, 0, 0, 49, 193, 171],
-    [0, 23, 13, 0, 0, 49, 213, 103],
-    [0, 23, 13, 0, 0, 49, 193, 160],
-    [0, 23, 13, 0, 0, 49, 198, 146],
-    [0, 23, 13, 0, 0, 49, 209, 50],
-    [0, 23, 13, 0, 0, 49, 209, 95],
-    [0, 23, 13, 0, 0, 49, 195, 83],
-    [0, 23, 13, 0, 0, 49, 213, 59],
-    [0, 23, 13, 0, 0, 49, 201, 218],
-    [0, 23, 13, 0, 0, 49, 195, 62],
-    [0, 23, 13, 0, 0, 49, 202, 5],
-    [0, 23, 13, 0, 0, 49, 204, 64],
-    [0, 23, 13, 0, 0, 49, 195, 10],
-    [0, 23, 13, 0, 0, 49, 213, 50],
-    [0, 23, 13, 0, 0, 49, 203, 231],
-    [0, 23, 13, 0, 0, 49, 213, 134],
-    [0, 23, 13, 0, 0, 49, 204, 46],
-    [0, 23, 13, 0, 0, 49, 198, 184],
-    [0, 23, 13, 0, 0, 49, 195, 55],
-    [0, 23, 13, 0, 0, 49, 209, 211],
-    [0, 23, 13, 0, 0, 49, 195, 71],
-    [0, 23, 13, 0, 0, 49, 199, 219],
-    [0, 23, 13, 0, 0, 49, 209, 112],
-    [0, 23, 13, 0, 0, 49, 194, 249],
-    [0, 23, 13, 0, 0, 49, 193, 161],
-    [0, 23, 13, 0, 0, 49, 213, 32],
-    [0, 23, 13, 0, 0, 49, 203, 229],
-    [0, 23, 13, 0, 0, 49, 209, 172],
-    [0, 23, 13, 0, 0, 49, 204, 88],
-    [0, 23, 13, 0, 0, 49, 209, 168],
-    [0, 23, 13, 0, 0, 49, 199, 222],
-    [0, 23, 13, 0, 0, 49, 213, 1],
-    [0, 23, 13, 0, 0, 49, 204, 15],
+    [00,0x17,0x0D,0x00,0x00,0x31,0xD1,0xAC],
+    [00,0x17,0x0D,0x00,0x00,0x31,0xCA,0x03],
+    [00,0x17,0x0D,0x00,0x00,0x31,0xC3,0x3E],
+    [00,0x17,0x0D,0x00,0x00,0x31,0xCC,0x0F],
 ]
-NUMNODESSTEP              = 5
+NUMNODESSTEP              = 2
 NUMNODESEND               = -1
 
 TIMEOUT_RESETMGRID        = 30
+TIMEOUT_DROP_BLINK_PACKET = 120
 
 #============================ helpers =========================================
 
@@ -203,9 +163,9 @@ class BlinkLab(threading.Thread):
         self.tag = IpMoteConnector.IpMoteConnector()
         self.tag.connect({'port':  SERIALPORT_TAG})
         
-        #for networksize in range(len(ALLMOTES), NUMNODESEND, -NUMNODESSTEP):
-            #self.runExperimentForSize(networksize)
-        self.send_blink_transactions(0, 10, 10)
+        for networksize in range(len(ALLMOTES), NUMNODESEND, -NUMNODESSTEP):
+            self.runExperimentForSize(networksize)
+        #self.send_blink_transactions(0, 10, 10)
     
     def handle_mgr_notif(self, serialport, notifName, notifParams):
         try:
@@ -320,7 +280,7 @@ class BlinkLab(threading.Thread):
 
         #=== send blink transaction
         
-        self.send_blink_transactions(networksize, 10, 10)
+        self.send_blink_transactions(networksize, 2, 10)
     
     def issue_command(self,serialport,cmd,params=None):
         
@@ -402,7 +362,7 @@ class BlinkLab(threading.Thread):
         # clear the lastCommandFinished for that manager
         with self.dataLock:
             self.lastCommandFinished[serialport] = None
-            self.last_blink_payload              = False
+            self.last_blink_payload              = None
         
         # wait for motes to disconnect
         time.sleep(TIMEOUT_RESETMGRID)
@@ -429,15 +389,21 @@ class BlinkLab(threading.Thread):
         for t in range(num_transactions):
         
             for p in range(num_packets):
-
+                # update timeout, when tag can drop packet
+                timeout_drop_blink = 0
+                
                 # issue blink
                 resp = self.issue_command(SERIALPORT_TAG, "dn_blink", {"fIncludeDscvNbrs": 1, "payload":[networksize, t, p]})
+                blink_payload     = ''.join([chr(b) for b in [networksize, t, p]])
+                
                 while True:
-                    input = self.tag.getNotificationInternal(-1)
-                    printAndLog('TAG', input)
-                    if input[0]==['txDone']:
+                    with self.dataLock:
+                        if self.last_blink_payload == blink_payload.encode('hex'):
+                            break
+                    time.sleep(1)
+                    timeout_drop_blink += 1
+                    if timeout_drop_blink == TIMEOUT_DROP_BLINK_PACKET:
                         break
-
 
             # reset tag at end of each transaction
             self.tag.dn_reset()
