@@ -93,38 +93,50 @@ def proc_tag_blink(networksize): # OK
 # 4, present the relation between network size and rxTime - txTime
 
 def plot_data():
-    # OK
     list_network_size = []
     list_delta_time = []
     list_num_neighbor = []
+    list_rssi_value = []
     for netsize in range(0, 46, 5):
         num_neighbor = []
-        
+        rssi_value = []
         data, neighbor = proc_mgr_blink(netsize)
 
         for i in neighbor:
             num_neighbor.append(len(i))
+            for j in range(len(i)):
+                rssi_value.append(i[j][1]) # get the rssi value
 
         list_network_size.append(netsize)
         list_num_neighbor.append(sta.mean(num_neighbor))
         list_delta_time.append(sta.mean(proc_tag_blink(netsize)))
+        list_rssi_value.append(sta.mean(rssi_value))
 
-        # data = ['\x00\x00\x00', '\x00\x00\x01', '\x00\x00\x02', '\x00\x00\x03', '\x00\x00\x04', '\x00\x00\x05']
         print(list_num_neighbor)
+        print(list_rssi_value)
     
-    # plot network size and number of neighbors
+    # plot network size and number of neighbors that are heared in the blink packet
     plt.plot(list_network_size, list_num_neighbor, marker='o')
     plt.xlabel('Network size', fontsize = 10)
     plt.ylabel('Number of neighbors', fontsize = 10)
     plt.suptitle('Number of neighbors and network size', fontsize = 15)
     plt.show()
     
-    # plot network size and time
+    # plot network size and tranmission time of blink packet from command issue time to receiving time in manager side
     plt.plot(list_network_size, list_delta_time, marker='o')
     plt.xlabel('Network size', fontsize = 10)
     plt.ylabel('Transmission time', fontsize = 10)
     plt.suptitle('Transmission time and network size', fontsize = 15)
     plt.show()
+    
+    # plot network size and RSSI value that are discovered by tag
+    plt.plot(list_network_size, list_rssi_value, marker='o')
+    plt.xlabel('Network size', fontsize = 10)
+    plt.ylabel('RSSI', fontsize = 10)
+    plt.suptitle('RSSI and network size', fontsize = 15)
+    plt.show()
+    
+    
 
 plot_data()
 
