@@ -93,24 +93,41 @@ def proc_tag_blink(networksize): # OK
 # 4, present the relation between network size and rxTime - txTime
 
 def plot_data():
-    pass
+    # OK
+    list_network_size = []
+    list_delta_time = []
+    list_num_neighbor = []
+    for netsize in range(0, 46, 5):
+        num_neighbor = []
+        
+        data, neighbor = proc_mgr_blink(netsize)
 
+        for i in neighbor:
+            num_neighbor.append(len(i))
 
+        list_network_size.append(netsize)
+        list_num_neighbor.append(sta.mean(num_neighbor))
+        list_delta_time.append(sta.mean(proc_tag_blink(netsize)))
 
-# OK
-for netsize in range(45, -1, -5):
-    data, neighbor = proc_mgr_blink(netsize)
-    num_neighbor = []
+        # data = ['\x00\x00\x00', '\x00\x00\x01', '\x00\x00\x02', '\x00\x00\x03', '\x00\x00\x04', '\x00\x00\x05']
+        print(list_num_neighbor)
+    
+    # plot network size and number of neighbors
+    plt.plot(list_network_size, list_num_neighbor, marker='o')
+    plt.xlabel('Network size', fontsize = 10)
+    plt.ylabel('Number of neighbors', fontsize = 10)
+    plt.suptitle('Number of neighbors and network size', fontsize = 15)
+    plt.show()
+    
+    # plot network size and time
+    plt.plot(list_network_size, list_delta_time, marker='o')
+    plt.xlabel('Network size', fontsize = 10)
+    plt.ylabel('Transmission time', fontsize = 10)
+    plt.suptitle('Transmission time and network size', fontsize = 15)
+    plt.show()
 
-    for i in neighbor:
-        num_neighbor.append(len(i))
+plot_data()
 
-    print'\n\nAverage num neighbors: {} is '.format(netsize),
-    print(sta.mean(num_neighbor))
-
-    print'Average of time for netsize: {} is '.format(netsize), 
-    print(sta.mean(proc_tag_blink(netsize)))
-    print(num_neighbor)
 raw_input('Press enter to finish')
 
 
