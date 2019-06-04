@@ -44,10 +44,10 @@ def get_blink_notif_mgr(notif_msg):
     return list_blink_msg
 
 # get all blink command of tag
-def get_blink_cmd_tag(cmd_msg):
+def get_cmd_mgr_tag(cmd_msg, cmd_name):
     list_cmd_msg = []
     for a_msg in cmd_msg:
-        if a_msg['msg']['cmd'] == 'dn_blink':
+        if a_msg['msg']['cmd'] == cmd_name:
             list_cmd_msg.append(a_msg)
     return list_cmd_msg
 
@@ -76,7 +76,7 @@ def proc_tag_blink(networksize, file_name): # OK
     list_delta = []
     
     list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
-    list_blink_cmd_tag = get_blink_cmd_tag(get_msg_type(file_name,'CMD'))
+    list_blink_cmd_tag = get_cmd_mgr_tag(get_msg_type(file_name,'CMD'), 'dn_blink')
     
     # compare payload id in both side manager and tag
     for msg_mgr in list_notif_blink_mgr:
@@ -89,10 +89,9 @@ def proc_tag_blink(networksize, file_name): # OK
                     raise Exception('Delta should be greater than 0')
     return(list_delta)
 
-# 3, present the relation between network size and txDone-issueTime
 # 4, present the relation between network size and rxTime - txTime
 
-def plot_data(begin_size, end_size, size_step, file_name):
+def plot_experiment(begin_size, end_size, size_step, file_name):
     list_network_size = []
     list_delta_time = []
     list_num_neighbor = []
@@ -135,13 +134,48 @@ def plot_data(begin_size, end_size, size_step, file_name):
     plt.ylabel('RSSI', fontsize = 10)
     plt.suptitle('RSSI and network size', fontsize = 15)
     plt.show()
-    
-    
 
-plot_data(0, 46, 5, 'blinkLab_suc.txt')
-plot_data(0, 46, 5, 'blinkLab-45.txt')
-plot_data(0, 11, 5, 'blinkLab-3.txt')
-plot_data(0, 16, 5, 'blinkLab-15.txt')
+# define get all MAC address and mote ID for each network experiment
+def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
+    #1. get all msg networksize in the data file
+    #2. get timestamp for each network size (using dictionary)
+    #3. create a dictionary of network size and moteid, mac address
+    #a dictionary moteid_mac = {5:{1:'M1', 2:'M2', 3:'M3', 4:'M4', 5:'M5'}, 10:{1:'N1', 2:'N2', 3:'N10'}}
+
+    time_stamp = {}
+    moteid_mac = {}
+    
+    list_msg_networksize = get_msg_type(file_name, 'NETWORKSIZE')
+    list_cmd_getmoteconfig = get_cmd_mgr_tag(get_msg_type(file_name, 'CMD'), 'dn_getMoteConfig')
+
+
+    for netsize in range(begin_size, end_size, size_step):
+        moteid_mac.update({netsize:{}}) # create moteid_mac dictionary with netsize keys
+        # moteid_mac = {5:{}, 10:{}, 15:{}, 20:{}, 25:{}}
+        for msg_size in list_msg_networksize:
+            if msg_size['msg']['networksize'] == netsize:
+                time_stamp[netsize] = msg_size['timestamp']
+
+    for netsize in range(begin_size, end_size, size_step):
+
+        if netsize != 0:
+            for msg_mote in list_cmd_getmoteconfig:
+                if time_stamp[netsize] < msg_mote['timestamp'] < time_stamp[netsize-size_step]:
+                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]:'-'.join(['%02x'%b for b in msg_mote['msg']['res'][1]])})
+        else:
+            for msg_mote in list_cmd_getmoteconfig:
+                if time_stamp[netsize] < msg_mote['timestamp']:
+                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]:'-'.join(['%02x'%b for b in msg_mote['msg']['res'][1]])})
+
+    return moteid_mac
+    
+moteid = get_mac_moteid_for_size(0, 46, 5, 'blinkLab_suc_2.txt')
+print(moteid)
+plot_experiment(0, 46, 5, 'blinkLab_suc_2.txt')
+
+#plot_data(0, 46, 5, 'blinkLab-45.txt')
+#plot_data(0, 11, 5, 'blinkLab-3.txt')
+#plot_data(0, 16, 5, 'blinkLab-15.txt')
 
 raw_input('Press enter to finish')
 
