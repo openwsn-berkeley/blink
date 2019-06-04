@@ -52,14 +52,14 @@ def get_blink_cmd_tag(cmd_msg):
     return list_cmd_msg
 
 # decode blink packet relate to network size and RSSI value
-def proc_mgr_blink(networksize): # OK
+def proc_mgr_blink(networksize, file_name): # OK
     list_neighbor = []
     list_data = []
 # 1, present the relation between network size and RSSI value
 # 2, present the relation between network size and number of neighbor
 # neighbor = [(1, -17), (11, -17), (9, -21), (10, -25)]
 # RSSI[0][3] = a[0][3][1]
-    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type('blinkLab_suc.txt','NOTIF'))
+    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
     for msg in list_notif_blink_mgr:
         data = msg['msg']['notifParams'][5] # OK: payload of blink pakcet
         if data[2] == networksize:
@@ -71,12 +71,12 @@ def proc_mgr_blink(networksize): # OK
     
 
 # decode blink data in manager and mapping rxTime and issueTime between Tag and Mgr
-def proc_tag_blink(networksize): # OK
+def proc_tag_blink(networksize, file_name): # OK
 
     list_delta = []
     
-    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type('blinkLab_suc.txt','NOTIF'))
-    list_blink_cmd_tag = get_blink_cmd_tag(get_msg_type('blinkLab_suc.txt','CMD'))
+    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
+    list_blink_cmd_tag = get_blink_cmd_tag(get_msg_type(file_name,'CMD'))
     
     # compare payload id in both side manager and tag
     for msg_mgr in list_notif_blink_mgr:
@@ -92,15 +92,18 @@ def proc_tag_blink(networksize): # OK
 # 3, present the relation between network size and txDone-issueTime
 # 4, present the relation between network size and rxTime - txTime
 
-def plot_data():
+def plot_data(begin_size, end_size, size_step, file_name):
     list_network_size = []
     list_delta_time = []
     list_num_neighbor = []
     list_rssi_value = []
-    for netsize in range(0, 46, 5):
+
+    print 'Wait for plotting...'
+
+    for netsize in range(begin_size, end_size, size_step):
         num_neighbor = []
         rssi_value = []
-        data, neighbor = proc_mgr_blink(netsize)
+        data, neighbor = proc_mgr_blink(netsize,file_name)
 
         for i in neighbor:
             num_neighbor.append(len(i))
@@ -109,12 +112,9 @@ def plot_data():
 
         list_network_size.append(netsize)
         list_num_neighbor.append(sta.mean(num_neighbor))
-        list_delta_time.append(sta.mean(proc_tag_blink(netsize)))
+        list_delta_time.append(sta.mean(proc_tag_blink(netsize,file_name)))
         list_rssi_value.append(sta.mean(rssi_value))
 
-        print(list_num_neighbor)
-        print(list_rssi_value)
-    
     # plot network size and number of neighbors that are heared in the blink packet
     plt.plot(list_network_size, list_num_neighbor, marker='o')
     plt.xlabel('Network size', fontsize = 10)
@@ -138,7 +138,10 @@ def plot_data():
     
     
 
-plot_data()
+plot_data(0, 46, 5, 'blinkLab_suc.txt')
+plot_data(0, 46, 5, 'blinkLab-45.txt')
+plot_data(0, 11, 5, 'blinkLab-3.txt')
+plot_data(0, 16, 5, 'blinkLab-15.txt')
 
 raw_input('Press enter to finish')
 
