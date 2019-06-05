@@ -53,13 +53,16 @@ def get_cmd_mgr_tag(cmd_msg, cmd_name):
 
 # decode blink packet relate to network size and RSSI value
 def proc_mgr_blink(networksize, file_name): # OK
+
     list_neighbor = []
     list_data = []
+
 # 1, present the relation between network size and RSSI value
 # 2, present the relation between network size and number of neighbor
 # neighbor = [(1, -17), (11, -17), (9, -21), (10, -25)]
 # RSSI[0][3] = a[0][3][1]
     list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
+
     for msg in list_notif_blink_mgr:
         data = msg['msg']['notifParams'][5] # OK: payload of blink pakcet
         if data[2] == networksize:
@@ -113,25 +116,27 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         list_num_neighbor.append(sta.mean(num_neighbor))
         list_delta_time.append(sta.mean(proc_tag_blink(netsize,file_name)))
         list_rssi_value.append(sta.mean(rssi_value))
-
+        
+        print(proc_tag_blink(netsize,file_name))
+        
     # plot network size and number of neighbors that are heared in the blink packet
     plt.plot(list_network_size, list_num_neighbor, marker='o')
-    plt.xlabel('Network size', fontsize = 10)
-    plt.ylabel('Number of neighbors', fontsize = 10)
+    plt.xlabel('Network size(motes)', fontsize = 10)
+    plt.ylabel('Number of neighbors(motes)', fontsize = 10)
     plt.suptitle('Number of neighbors and network size', fontsize = 15)
     plt.show()
     
     # plot network size and tranmission time of blink packet from command issue time to receiving time in manager side
     plt.plot(list_network_size, list_delta_time, marker='o')
-    plt.xlabel('Network size', fontsize = 10)
-    plt.ylabel('Transmission time', fontsize = 10)
+    plt.xlabel('Network size(motes)', fontsize = 10)
+    plt.ylabel('Transmission time(s)', fontsize = 10)
     plt.suptitle('Transmission time and network size', fontsize = 15)
     plt.show()
     
     # plot network size and RSSI value that are discovered by tag
     plt.plot(list_network_size, list_rssi_value, marker='o')
-    plt.xlabel('Network size', fontsize = 10)
-    plt.ylabel('RSSI', fontsize = 10)
+    plt.xlabel('Network size(motes)', fontsize = 10)
+    plt.ylabel('RSSI(dBm)', fontsize = 10)
     plt.suptitle('RSSI and network size', fontsize = 15)
     plt.show()
 
@@ -151,7 +156,7 @@ def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
 
     for netsize in range(begin_size, end_size, size_step):
         moteid_mac.update({netsize:{}}) # create moteid_mac dictionary with netsize keys
-        # moteid_mac = {5:{}, 10:{}, 15:{}, 20:{}, 25:{}}
+        # moteid_mac = {0:{}, 5:{}, 10:{}, 15:{}, 20:{}, 25:{}}
         for msg_size in list_msg_networksize:
             if msg_size['msg']['networksize'] == netsize:
                 time_stamp[netsize] = msg_size['timestamp']
@@ -160,25 +165,22 @@ def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
 
         if netsize != 0:
             for msg_mote in list_cmd_getmoteconfig:
+            
                 if time_stamp[netsize] < msg_mote['timestamp'] < time_stamp[netsize-size_step]:
-                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]:'-'.join(['%02x'%b for b in msg_mote['msg']['res'][1]])})
+                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]:msg_mote['msg']['res'][1]})
         else:
             for msg_mote in list_cmd_getmoteconfig:
                 if time_stamp[netsize] < msg_mote['timestamp']:
-                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]:'-'.join(['%02x'%b for b in msg_mote['msg']['res'][1]])})
+                    moteid_mac[netsize].update({msg_mote['msg']['res'][2]: msg_mote['msg']['res'][1]})
 
     return moteid_mac
-    
-moteid = get_mac_moteid_for_size(0, 46, 5, 'blinkLab_suc_2.txt')
-print(moteid)
-plot_experiment(0, 46, 5, 'blinkLab_suc_2.txt')
-
-#plot_data(0, 46, 5, 'blinkLab-45.txt')
-#plot_data(0, 11, 5, 'blinkLab-3.txt')
-#plot_data(0, 16, 5, 'blinkLab-15.txt')
-
-raw_input('Press enter to finish')
-
+#============================ main ============================================
+def main():
+    moteid = get_mac_moteid_for_size(0, 46, 5, 'blinkLab_suc_2.txt')
+    plot_experiment(0, 46, 5, 'blinkLab_suc_2.txt')
+    raw_input('Press enter to finish')
+if __name__=="__main__":
+    main()
 
 
 
