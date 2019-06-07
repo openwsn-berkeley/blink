@@ -66,6 +66,7 @@ def proc_mgr_blink(networksize, file_name): # OK
     list_len_mote = []
     list_packet_no = []
     packet_no = 0
+    interrupt_list = 0
 
 # blink_neighbor = [(1, -17), (11, -17), (9, -21), (10, -25)]
 
@@ -85,10 +86,14 @@ def proc_mgr_blink(networksize, file_name): # OK
             for moteid, rssi_value in blink_neighbor:
                 set_moteid.add(moteid) # create set of moteid value
             packet_no += 1
-
-            list_len_mote.append(len(set_moteid))
             
-            list_packet_no.append(packet_no)
+            if interrupt_list == 0:
+                list_len_mote.append(len(set_moteid))
+                list_packet_no.append(packet_no)
+
+            if len(set_moteid) >= 10: # Number of packets send to, so tag can hear 10 different motes
+                interrupt_list += 1
+    print(list_packet_no)
 
     return list_payload, list_neighbor, list_packet_no, list_len_mote
 
@@ -116,6 +121,7 @@ def proc_tag_blink(networksize, file_name): # OK
 def plot_experiment(begin_size, end_size, size_step, file_name):
 
     list_network_size = []
+    list_len_num_packet = []
     list_delta_time = []
     list_num_neighbor = []
     list_rssi_value = []
@@ -141,16 +147,36 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         list_num_neighbor.append(sta.mean(num_neighbor))
         list_delta_time.append(sta.mean(proc_tag_blink(netsize,file_name)))
         list_rssi_value.append(sta.mean(rssi_value))
+        
+        list_len_num_packet.append(len(dict_packet_no[netsize]))
 
         #print(len(proc_tag_blink(netsize,file_name))) # number of blink notif
         
-        plt.plot(list_packet_no, list_len_mote, marker='o')
-        plt.xlabel('Number of packets send', fontsize = 10)
-        plt.ylabel('Number of discovered neighbors', fontsize = 10)
-        plt.suptitle('Packet send and number of neighbors network size: {}'.format(netsize), fontsize = 15)
-        plt.show()
+        #plt.plot(list_packet_no, list_len_mote, marker='o')
+        #plt.xlabel('Number of packets send', fontsize = 10)
+        #plt.ylabel('Number of discovered neighbors', fontsize = 10)
+        #plt.suptitle('Packet send and number of neighbors network size: {}'.format(netsize), fontsize = 15)
+        #plt.show()
+
+    plt.plot(dict_packet_no[10], dict_len_mote[10], marker='o')
+    plt.plot(dict_packet_no[15], dict_len_mote[15], marker='o')
+    plt.plot(dict_packet_no[20], dict_len_mote[20], marker='o')
+    plt.plot(dict_packet_no[25], dict_len_mote[25], marker='o')
+    plt.plot(dict_packet_no[30], dict_len_mote[30], marker='o')
+    plt.plot(dict_packet_no[35], dict_len_mote[35], marker='o')
+    plt.plot(dict_packet_no[40], dict_len_mote[40], marker='o')
+    plt.plot(dict_packet_no[45], dict_len_mote[45], marker='o')
+    plt.legend(['10', '15', '20', '25', '30', '35', '40', '45'], loc='lower right')
+
+    plt.xlabel('Number of packets send', fontsize = 10)
+    plt.ylabel('Number of neighbors(motes)', fontsize = 10)
+    plt.suptitle('Packets send and number of neighbors for each network size', fontsize = 15)
+
+    #plt.plot(list_network_size, list_len_num_packet, marker='o')
+
     
-    
+    plt.show()
+
 
     # plot network size and number of neighbors that are heared in the blink packet
     #plt.plot(list_network_size, list_num_neighbor, marker='o')
