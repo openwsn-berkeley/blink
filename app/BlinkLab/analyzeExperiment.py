@@ -22,6 +22,10 @@ import json
 from SmartMeshSDK.protocols.blink      import blink
 
 #============================ helpers =========================================
+#1, The script presents the relation between network size and number of packet that receives 10 different motes
+#2, The script different network size with number of mote increase
+
+
 
 # get message on the log file
 def get_msg_type(file_name, msg_type):
@@ -51,32 +55,47 @@ def get_cmd_mgr_tag(cmd_msg, cmd_name):
             list_cmd_msg.append(a_msg)
     return list_cmd_msg
 
-# decode blink packet relate to network size and RSSI value
+# decode blink packet then return list neighbor and payload
+list_index = []
 def proc_mgr_blink(networksize, file_name): # OK
 
     list_neighbor = []
-    list_data = []
+    list_netsize = []
+    list_payload = []
+    set_moteid = set()
+    list_len_mote = []
+    list_packet_no = []
+    packet_no = 0
 
-# 1, present the relation between network size and RSSI value
-# 2, present the relation between network size and number of neighbor
-# neighbor = [(1, -17), (11, -17), (9, -21), (10, -25)]
-# RSSI[0][3] = a[0][3][1]
-    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
+# blink_neighbor = [(1, -17), (11, -17), (9, -21), (10, -25)]
+
+
+    list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF')) #list all blink notif mgr
 
     for msg in list_notif_blink_mgr:
-        data = msg['msg']['notifParams'][5] # OK: payload of blink pakcet
+        data = msg['msg']['notifParams'][5] # payload of blink pakcet
+
         if data[2] == networksize:
             payload = ''.join([chr(p) for p in data])
-            blink_data, blink_neighbor = blink.decode_blink(payload)
-            list_neighbor.append(blink_neighbor) # OK
-            list_data.append(blink_data) # OK
-    return list_data, list_neighbor
-    
+            blink_data, blink_neighbor = blink.decode_blink(payload)# decode blink payload
+
+            list_neighbor.append(blink_neighbor) # create neigbor(moteid, rssi) list
+            list_payload.append(blink_data) # create blink payload list
+
+            for moteid, rssi_value in blink_neighbor:
+                set_moteid.add(moteid) # create set of moteid value
+            packet_no += 1
+
+            list_len_mote.append(len(set_moteid))
+            
+            list_packet_no.append(packet_no)
+
+    return list_payload, list_neighbor, list_packet_no, list_len_mote
 
 # decode blink data in manager and mapping rxTime and issueTime between Tag and Mgr
 def proc_tag_blink(networksize, file_name): # OK
 
-    list_delta = []
+    list_delta_time = []
     
     list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
     list_blink_cmd_tag = get_cmd_mgr_tag(get_msg_type(file_name,'CMD'), 'dn_blink')
@@ -87,25 +106,31 @@ def proc_tag_blink(networksize, file_name): # OK
         for msg_tag in list_blink_cmd_tag:
             if data[2] == networksize and data[2:5] == msg_tag['msg']['params']['payload']:
                 delta = msg_mgr['timestamp'] - msg_tag['timestamp']
-                list_delta.append(delta)
+                list_delta_time.append(delta)
                 if delta <= 0:
                     raise Exception('Delta should be greater than 0')
-    return(list_delta)
+    return list_delta_time # 4, present the relation between network size and rxTime - txTime
 
-# 4, present the relation between network size and rxTime - txTime
+
 
 def plot_experiment(begin_size, end_size, size_step, file_name):
+
     list_network_size = []
     list_delta_time = []
     list_num_neighbor = []
     list_rssi_value = []
+    dict_len_mote = {}
+    dict_packet_no = {}
 
     print 'Wait for plotting...'
 
     for netsize in range(begin_size, end_size, size_step):
         num_neighbor = []
         rssi_value = []
-        data, neighbor = proc_mgr_blink(netsize,file_name)
+        data, neighbor, list_packet_no, list_len_mote = proc_mgr_blink(netsize,file_name)
+
+        dict_len_mote.update({netsize:list_len_mote})
+        dict_packet_no.update({netsize:list_packet_no})
 
         for i in neighbor:
             num_neighbor.append(len(i))
@@ -116,31 +141,32 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         list_num_neighbor.append(sta.mean(num_neighbor))
         list_delta_time.append(sta.mean(proc_tag_blink(netsize,file_name)))
         list_rssi_value.append(sta.mean(rssi_value))
+
+        #print(len(proc_tag_blink(netsize,file_name))) # number of blink notif
         
-        print(proc_tag_blink(netsize,file_name))
-        
+        plt.plot(list_packet_no, list_len_mote, marker='o')
+        plt.xlabel('Number of packets send', fontsize = 10)
+        plt.ylabel('Number of discovered neighbors', fontsize = 10)
+        plt.suptitle('Packet send and number of neighbors network size: {}'.format(netsize), fontsize = 15)
+        plt.show()
+    
+    
+
     # plot network size and number of neighbors that are heared in the blink packet
-    plt.plot(list_network_size, list_num_neighbor, marker='o')
-    plt.xlabel('Network size(motes)', fontsize = 10)
-    plt.ylabel('Number of neighbors(motes)', fontsize = 10)
-    plt.suptitle('Number of neighbors and network size', fontsize = 15)
-    plt.show()
+    #plt.plot(list_network_size, list_num_neighbor, marker='o')
+    #plt.xlabel('Network size(motes)', fontsize = 10)
+    #plt.ylabel('Number of neighbors(motes)', fontsize = 10)
+    #plt.suptitle('Number of neighbors and network size', fontsize = 15)
+    #plt.show()
+
+    # plot network size and number of packet send to reach 10 neighbors
+    print(dict_len_mote)
+    print(dict_packet_no)
+
     
-    # plot network size and tranmission time of blink packet from command issue time to receiving time in manager side
-    plt.plot(list_network_size, list_delta_time, marker='o')
-    plt.xlabel('Network size(motes)', fontsize = 10)
-    plt.ylabel('Transmission time(s)', fontsize = 10)
-    plt.suptitle('Transmission time and network size', fontsize = 15)
-    plt.show()
-    
-    # plot network size and RSSI value that are discovered by tag
-    plt.plot(list_network_size, list_rssi_value, marker='o')
-    plt.xlabel('Network size(motes)', fontsize = 10)
-    plt.ylabel('RSSI(dBm)', fontsize = 10)
-    plt.suptitle('RSSI and network size', fontsize = 15)
-    plt.show()
 
 # define get all MAC address and mote ID for each network experiment
+
 def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
     #1. get all msg networksize in the data file
     #2. get timestamp for each network size (using dictionary)
@@ -163,7 +189,7 @@ def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
 
     for netsize in range(begin_size, end_size, size_step):
 
-        if netsize != 0:
+        if netsize != begin_size:
             for msg_mote in list_cmd_getmoteconfig:
             
                 if time_stamp[netsize] < msg_mote['timestamp'] < time_stamp[netsize-size_step]:
@@ -174,10 +200,11 @@ def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
                     moteid_mac[netsize].update({msg_mote['msg']['res'][2]: msg_mote['msg']['res'][1]})
 
     return moteid_mac
+
 #============================ main ============================================
 def main():
-    moteid = get_mac_moteid_for_size(0, 46, 5, 'blinkLab_suc_2.txt')
-    plot_experiment(0, 46, 5, 'blinkLab_suc_2.txt')
+    moteid = get_mac_moteid_for_size(10, 46, 5, 'blinkLab_final.txt')
+    plot_experiment(10, 46, 5, 'blinkLab_final.txt')
     raw_input('Press enter to finish')
 if __name__=="__main__":
     main()
