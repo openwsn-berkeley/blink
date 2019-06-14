@@ -25,9 +25,7 @@ from SmartMeshSDK.protocols.blink      import blink
 #1, The script presents the relation between network size and number of packet that receives 10 different motes
 #2, The script different network size with number of mote increase
 
-
-
-# get message on the log file
+# get message from log file
 def get_msg_type(file_name, msg_type):
     list_msg = []
 
@@ -55,31 +53,26 @@ def get_cmd_mgr_tag(cmd_msg, cmd_name):
             list_cmd_msg.append(a_msg)
     return list_cmd_msg
 
-# decode blink packet then return list neighbor and payload
-list_index = []
-
+# decode blink packet then return list neighbor, payload, number of packets send, number of motes and rssi value
 def proc_mgr_blink(networksize, file_name): # OK
 
     list_neighbor = []
     list_netsize = []
     list_payload = []
 
-    list_len_mote = [] # list of length of different discovered motes in each network size experimet
     list_packet_no = [] # list of number of packets send
+    list_len_mote = [] # list of number of motes
 
-    set_moteid = set()
+    set_moteid = set() # set of different mote id
 
     packet_no = 0
     interrupt_list = 0
 
     dict_mac_rssi = {}
-    #netsize_mote_rssi = {}
 
-# blink_neighbor = [[(1, -17), (11, -17), (9, -21), (10, -25)], [(9, -21), (10, -25)]]
-
+    # blink_neighbor = [[(1, -17), (11, -17), (9, -21), (10, -25)], [(9, -21), (10, -25)]]
 
     list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF')) #list all blink notif mgr
-    #netsize_mote_rssi.update({networksize:{}})
 
     for msg in list_notif_blink_mgr:
         data = msg['msg']['notifParams'][5] # payload of blink pakcet
@@ -98,9 +91,8 @@ def proc_mgr_blink(networksize, file_name): # OK
             if not interrupt_list:
                 list_len_mote.append(len(set_moteid))
                 list_packet_no.append(packet_no)
-
-            if len(set_moteid) >= 10: # number of packets send to, so tag can hear 10 different motes
-                interrupt_list += 1
+            #if len(set_moteid) >= 10: # number of packets send to, so tag can hear 10 different motes
+                #interrupt_list += 1
 
     # get MAC address and list of RSSI value for each network size
     # mote_rssi = {0:{1:[-22, -25, -24, ...], 2:[], 3:[]}, 5:{1:[], 2:[], 3:[]}}
@@ -137,8 +129,6 @@ def proc_tag_blink(networksize, file_name): # OK
                     raise Exception('Delta should be greater than 0')
     return list_delta_time # 4, present the relation between network size and rxTime - txTime
 
-
-
 def plot_experiment(begin_size, end_size, size_step, file_name):
 
     list_network_size = [] # all network size from 0 to 45
@@ -146,14 +136,14 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     list_average_delta_time = [] # list of average of transmission time
     list_average_num_neighbor = [] # list of average of discovered neighbor for each packet send
     list_average_rssi_value = [] # list of avaerage rssi value of each network size
-    rssi_of_all_mac = [] # all of rssi values (total rssi of all mac address) of the 1st experiment
+    list_rssi_of_all_mac = [] # all of rssi values (total rssi of all mac address) of the 1st experiment
 
-    dict_len_mote = {} # number of neighbors that heard by tag
-    dict_packet_no = {} # number of packets that are sent to discover 10 motes, and key is network size
+    dict_len_mote = {} # number of neighbors that heard by tag, dict {networksize: list_len_mote}
+    dict_packet_no = {} # number of packets that are sent to discover 10 motes, dict {network size: list_packet_no}
     dict_mac_key = {} # MAC addresses that are heard by tag and network size {45:[mac1, mac2, mac3], 40:[]}
-    netsize_mote_rssi = {} # network size and mote's MAC address, rssi value
-    rssi_of_spec_mac = {} # dictionary of MAC address: list rssi value
-    dict_rssi_of_all_mac_for_size = {} # dictionary of network size: list rssi value
+    dict_netsize_mote_rssi = {} # dictionary, {network size: {mote's MAC address: list of rssi value}}
+    dict_rssi_of_spec_mac = {} # dictionary of {MAC address: list of rssi value}
+    dict_rssi_of_all_mac_for_each_size = {} # dictionary of {network size: list rssi value}
 
     print 'Wait for plotting...'
 
@@ -164,7 +154,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
 
         data, neighbor, list_packet_no, list_len_mote, dict_mac_rssi = proc_mgr_blink(netsize,file_name)
 
-        netsize_mote_rssi.update({netsize:dict_mac_rssi})
+        dict_netsize_mote_rssi.update({netsize:dict_mac_rssi})
         dict_len_mote.update({netsize:list_len_mote})
         dict_packet_no.update({netsize:list_packet_no})
 
@@ -181,78 +171,65 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         list_len_num_packet_discover_10_motes.append(len(dict_packet_no[netsize]))
 
         # All MACs have RSSI value
-        for mac_key in netsize_mote_rssi[netsize]:
+        for mac_key in dict_netsize_mote_rssi[netsize]:
             list_mac_key.append(mac_key)
         dict_mac_key.update({netsize:list_mac_key})
 
+        #plt.plot(list_packet_no, list_len_mote, marker='.') # number of packets send and discovered neighbors
 
-        #print(len(proc_tag_blink(netsize,file_name))) # number of blink notif
 
-        #plt.plot(list_packet_no, list_len_mote, marker='o')
-        #plt.xlabel('Number of packets send', fontsize = 10)
-        #plt.ylabel('Number of discovered neighbors', fontsize = 10)
-        #plt.suptitle('Packet send and number of neighbors network size: {}'.format(netsize), fontsize = 15)
-        #plt.show()
+    #plt.plot(dict_packet_no[0], dict_len_mote[0], marker='.')
+    #plt.plot(dict_packet_no[5], dict_len_mote[5], marker='.')
+    #plt.plot(dict_packet_no[10], dict_len_mote[10], marker='.')
+    #plt.plot(dict_packet_no[15], dict_len_mote[15], marker='.')
+    #plt.plot(dict_packet_no[20], dict_len_mote[20], marker='.')
+    #plt.plot(dict_packet_no[25], dict_len_mote[25], marker='.')
+    #plt.plot(dict_packet_no[30], dict_len_mote[30], marker='.')
+    #plt.plot(dict_packet_no[35], dict_len_mote[35], marker='.')
+    #plt.plot(dict_packet_no[40], dict_len_mote[40], marker='.')
+    #plt.plot(dict_packet_no[45], dict_len_mote[45], marker='.')
 
-    #plt.plot(dict_packet_no[10], dict_len_mote[10], marker='o')
-    #plt.plot(dict_packet_no[15], dict_len_mote[15], marker='o')
-    #plt.plot(dict_packet_no[20], dict_len_mote[20], marker='o')
-    #plt.plot(dict_packet_no[25], dict_len_mote[25], marker='o')
-    #plt.plot(dict_packet_no[30], dict_len_mote[30], marker='o')
-    #plt.plot(dict_packet_no[35], dict_len_mote[35], marker='o')
-    #plt.plot(dict_packet_no[40], dict_len_mote[40], marker='o')
-    #plt.plot(dict_packet_no[45], dict_len_mote[45], marker='o')
-    
-    #plt.plot(list_network_size, list_len_mote, marker='o')
-    #plt.legend(['10', '15', '20', '25', '30', '35', '40', '45'], loc='lower right')
+    #plt.plot(list_network_size,list_diff_mote_size, marker='o')
+
+    #plt.legend(['0', '5', '10', '15', '20', '25', '30', '35', '40', '45'], loc='lower right')
 
     #plt.xlabel('Number of packets send', fontsize = 10)
     #plt.ylabel('Number of network(motes)', fontsize = 10)
     #plt.suptitle('Number of packets send to discover 10 different neighbors', fontsize = 15)
 
-    #plt.plot(list_network_size, list_len_num_packet_discover_10_motes, marker='o')
+    #plt.plot(list_network_size, [list_len_mote], marker='o')
+    #plt.suptitle('Maximum number of different discovered motes to each network size', fontsize = 12)
+    #plt.ylabel('Maximum number of different discovered motes (motes)', fontsize = 10)
+    #plt.xlabel('Network size (motes)', fontsize = 10)
 
     #plt.show()
 
-    #plt.boxplot([netsize_mote_rssi[45]['00-17-0d-00-00-31-c6-a1'], netsize_mote_rssi[45]['00-17-0d-00-00-31-c6-a1'], netsize_mote_rssi[45]['00-17-0d-00-00-31-d1-ac']])
+    #plt.boxplot([dict_netsize_mote_rssi[45]['00-17-0d-00-00-31-c6-a1'], dict_netsize_mote_rssi[45]['00-17-0d-00-00-31-c6-a1'], dict_netsize_mote_rssi[45]['00-17-0d-00-00-31-d1-ac']])
     #plt.show()
 
-    #netsize_mote_rssi = {45:{'00-17-0d-00-00-31-d1-ac':[-29, -30, -28, -32]}}
-    #rssi_of_spec_mac = {'00-17-0d-00-00-31-cb-e7':[-29, -30, -28, -32], '00-17-0d-00-00-31-ca-03':[-22, -24 -25, -27], '00-17-0d-00-00-31-cc-2e':[-31, -29, -30, -34]}
+    #dict_netsize_mote_rssi = {45:{'00-17-0d-00-00-31-d1-ac':[-29, -30, -28, -32]}}
+    #dict_rssi_of_spec_mac = {'00-17-0d-00-00-31-cb-e7':[-29, -30, -28, -32], '00-17-0d-00-00-31-ca-03':[-22, -24 -25, -27], '00-17-0d-00-00-31-cc-2e':[-31, -29, -30, -34]}
 
     for i in range(begin_size, end_size, size_step):
-        list_rssi_of_all_mac_for_size = []
+        list_rssi_of_all_mac_for_each_size = []
         for mac in dict_mac_key[i]:
 
-            rssi_of_all_mac += netsize_mote_rssi[i][mac]
-            list_rssi_of_all_mac_for_size += netsize_mote_rssi[i][mac]
-            if mac in rssi_of_spec_mac:
-                rssi_of_spec_mac[mac] += netsize_mote_rssi[i][mac]
+            list_rssi_of_all_mac += dict_netsize_mote_rssi[i][mac]
+            list_rssi_of_all_mac_for_each_size += dict_netsize_mote_rssi[i][mac]
+            if mac in dict_rssi_of_spec_mac:
+                dict_rssi_of_spec_mac[mac] += dict_netsize_mote_rssi[i][mac]
             else:
-                rssi_of_spec_mac.update({mac:netsize_mote_rssi[i][mac]})
-        dict_rssi_of_all_mac_for_size.update({i:list_rssi_of_all_mac_for_size})
+                dict_rssi_of_spec_mac.update({mac:dict_netsize_mote_rssi[i][mac]})
+        dict_rssi_of_all_mac_for_each_size.update({i:list_rssi_of_all_mac_for_each_size})
 
-    #plt.boxplot(rssi_of_all_mac)
-    #plt.suptitle('RSSI value distribution of whole experiment', fontsize = 12)
-    #plt.ylabel('RSSI(dBm)', fontsize = 10)
-    print(dict_rssi_of_all_mac_for_size)
-
-    #plt.show()
-
-
-
-
-    #plot network size and number of neighbors that are heared in the blink packet
-    #plt.plot(list_network_size, list_num_neighbor, marker='o')
-    #plt.xlabel('Network size(motes)', fontsize = 10)
-    #plt.ylabel('Number of neighbors(motes)', fontsize = 10)
-    #plt.suptitle('Number of neighbors and network size', fontsize = 15)
-    #plt.show()
-
-    # plot network size and number of packet send to reach 10 neighbors
+    plt.boxplot([b for b in dict_rssi_of_spec_mac.values() if len(b) > 200])
+    #plt.boxplot(dict_rssi_of_spec_mac['00-17-0d-00-00-30-3b-ff'])
+    plt.suptitle('RSSI value distribution for mac has more than 200 values', fontsize = 12)
+    #plt.xlabel('Network size (motes)', fontsize = 10)
+    plt.ylabel('RSSI(dBm)', fontsize = 10)
+    plt.show()
 
 # function will get all MAC address and mote IDs for each network size experiment
-
 def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
     #1. get all msg networksize in the data file
     #2. get timestamp for each network size (using dictionary)
@@ -261,10 +238,9 @@ def get_mac_moteid_for_size(begin_size, end_size, size_step, file_name):
 
     time_stamp = {}
     moteid_mac = {}
-    
+
     list_msg_networksize = get_msg_type(file_name, 'NETWORKSIZE')
     list_cmd_getmoteconfig = get_cmd_mgr_tag(get_msg_type(file_name, 'CMD'), 'dn_getMoteConfig')
-
 
     for netsize in range(begin_size, end_size, size_step):
 
