@@ -158,7 +158,13 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     dict_rssi_of_all_mac_for_each_size = {} # dictionary of {network size: list rssi value}
     dict_trans_time_for_each_size = {} # dictionary of {network size: list transmission time}
     dict_num_neighor_for_each_packet_each_size = {} # dictionary of {network size: list number of motes}
+    
+    # create new folder for plotted figure
 
+    current_dir = os.getcwd()
+    new_dir = current_dir + '\ploted_figure'
+    if not os.path.exists(new_dir):
+        os.makedirs(new_dir)
 
 #==========================================processing datat ======================================
     for netsize in range(begin_size, end_size, size_step):
@@ -232,7 +238,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Network size (motes)', fontsize = 10)
     plt.ylabel('Transmission time(s)', fontsize = 10)
     
-    plt.savefig('image/1_aver_transmission_time.png')
+    plt.savefig('ploted_figure/1_aver_transmission_time.png')
     plt.show()
     
 
@@ -242,7 +248,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Network size (motes)', fontsize = 10)
     plt.ylabel('Average number of motes (motes)', fontsize = 10)
     
-    plt.savefig('image/2_aver_number_of_neighbor.png')
+    plt.savefig('ploted_figure/2_aver_number_of_neighbor.png')
     plt.show()
     
     
@@ -252,7 +258,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Network size (motes)', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/3_average_rssi_value.png')
+    plt.savefig('ploted_figure/3_average_rssi_value.png')
     plt.show()
 
 #4, Maximum number of motes that are discovered for each network size [OK] 
@@ -261,7 +267,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Network size (motes)', fontsize = 10)
     plt.ylabel('Number of discovered motes (motes)', fontsize = 10)
     
-    plt.savefig('image/4_maximum_number_of_motes.png')
+    plt.savefig('ploted_figure/4_maximum_number_of_motes.png')
     plt.show()
     
 #5, Packets send to discover more than 10 motes for each network size [OK] 
@@ -282,7 +288,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     
     plt.legend(['10', '15','20','25','30','35','40','45'], title = 'Network size', loc = 'lower right')
     
-    plt.savefig('image/5_1_number_ofmotes_until_10_motes.png')
+    plt.savefig('ploted_figure/5_1_number_ofmotes_until_10_motes.png')
     plt.show()
     
     # plot figure for network size 0 to 45 motes
@@ -302,7 +308,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.ylabel('Number of discovered motes (motes)', fontsize = 10)
     
     plt.legend(['0','5', '10', '15','20','25','30','35','40','45'], title = 'Network size', loc = 'lower right')
-    plt.savefig('image/5_2_number_ofmotes_until_10_motes.png')
+    plt.savefig('ploted_figure/5_2_number_ofmotes_until_10_motes.png')
     plt.show()
     #
     # plot multiple diagrams on the same figure
@@ -333,7 +339,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(['25 motes'], fontsize = 7)
     
     plt.suptitle('Number of discovered motes for each network size until 10 motes', fontsize = 10)
-    plt.savefig('image/5_3_number_of_packets_until_10_motes.png')
+    plt.savefig('ploted_figure/5_3_number_of_packets_until_10_motes.png')
     plt.show()
     
     ##== plot for network size from 30 to 45 motes
@@ -362,7 +368,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(['45 motes'], fontsize = 7)
     
     plt.suptitle('Number of discovered motes for each network size until 10 motes', fontsize = 10)
-    plt.savefig('image/5_4_number_of_packet_size10_1000.png')
+    plt.savefig('ploted_figure/5_4_number_of_packet_size10_1000.png')
     plt.show()
 #6, Maximum number of packets send to make sure tag can discover more than 10 motes for each network size [OK] 
     # plot only for network size 10 to 45 motes, discovered 10 motes
@@ -372,7 +378,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Network size (mote)', fontsize = 10)
     plt.ylabel('Number of packets send (packets)', fontsize = 10)
     
-    plt.savefig('image/6_number_of_packets_send_until_10_motes.png')
+    plt.savefig('ploted_figure/6_number_of_packets_send_until_10_motes.png')
     plt.show()
 
 #7, Number of discovered motes and number of packets send for each network size [OK] - anh huong
@@ -393,7 +399,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.ylabel('Number of discovered motes (motes)', fontsize = 10)
     
     plt.legend(['0','5', '10', '15','20','25','30','35','40','45'], title = 'Network size', loc = 'lower right')
-    plt.savefig('image/7_number_of_discovered_motes_for_200_packets_send.png')
+    plt.savefig('ploted_figure/7_number_of_discovered_motes_for_200_packets_send.png')
     plt.show()
     
 
@@ -406,7 +412,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.ylabel('Ratio', fontsize = 10)
     #plt.legend(labels = ['Packets'], fontsize = 10)
     
-    plt.savefig('image/8_1_transmisson_time_distribution.png')
+    plt.savefig('ploted_figure/8_1_transmisson_time_distribution.png')
     plt.show()
     
     # using hist to present the distribution of transmisson time for whole network
@@ -417,7 +423,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     
     #plt.legend(labels = ['Packets'], fontsize = 10)
     
-    plt.savefig('image/8_2_transmission_time_distribution.png')
+    plt.savefig('ploted_figure/8_2_transmission_time_distribution.png')
     plt.show()
 
 #9, Distribution of transmission time for each network size [half OK]
@@ -439,7 +445,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(title = 'Network size', loc = 'upper right', labels = ['0','5', '10', '15','20','25','30','35','40','45'])
     #plt.xticks([1,2,3,4,5,6,7,8,9,10], ['0','5', '10', '15','20','25','30','35','40','45'])
     
-    plt.savefig('image/9_1_transmission_time_distribution.png')
+    plt.savefig('ploted_figure/9_1_transmission_time_distribution.png')
     plt.show()
     
     
@@ -461,7 +467,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(['0','5', '10', '15','20','25','30','35','40','45'], title = 'Network size', fontsize = 10)
     #plt.xticks([1,2,3,4,5,6,7,8,9,10], ['0','5', '10', '15','20','25','30','35','40','45'])
     
-    plt.savefig('image/9_2_transmission_time_dsitribution.png')
+    plt.savefig('ploted_figure/9_2_transmission_time_dsitribution.png')
     plt.show()
 
 #10, Distribution of transmission time for each network size (separately) [OK]
@@ -479,7 +485,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(['5'], fontsize = 7)
     
     plt.suptitle('Distribution of transmission time of each network size (motes)', fontsize = 10)
-    plt.savefig('image/10_1_transmission_time_distribution.png')
+    plt.savefig('ploted_figure/10_1_transmission_time_distribution.png')
     plt.show()
     
     #=== for num_motes = 10 to 25
@@ -507,7 +513,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     
     plt.suptitle('Distribution of transmission time for each network size(motes)', fontsize = 10)
     
-    plt.savefig('image/10_2_transmission_time_distribution_size_10_25.png')
+    plt.savefig('ploted_figure/10_2_transmission_time_distribution_size_10_25.png')
     plt.show()
     
     #=== for num_motes = 30 to 45
@@ -534,7 +540,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.legend(['45'], fontsize = 7)
     
     plt.suptitle('Distribution of transmission time for each network size(motes)', fontsize = 10)
-    plt.savefig('image/10_3_transmission_time_distribution_size_30_45.png')
+    plt.savefig('ploted_figure/10_3_transmission_time_distribution_size_30_45.png')
     plt.show()
     
     #plot separately each figure
@@ -545,7 +551,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         plt.ylabel('Packets', fontsize = 10)
         plt.legend([netsize], title = 'Network size', fontsize = 10)
         
-        plt.savefig('image/10_size{}_average_transmission_time.png'.format(netsize))
+        plt.savefig('ploted_figure/10_size{}_average_transmission_time.png'.format(netsize))
         plt.show()
 
 #11, Distribution of RSSI values for whole experiment [OK]
@@ -554,7 +560,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('All value', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/11_RSSI_distribution_whole_experiment.png')
+    plt.savefig('ploted_figure/11_RSSI_distribution_whole_experiment.png')
     plt.show()
 
 
@@ -569,7 +575,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.ylabel('RSSI (dBm)', fontsize = 10)
     plt.xticks([1,2,3,4,5,6,7,8,9,10], ['0','5', '10', '15','20','25','30','35','40','45'])
     
-    plt.savefig('image/12_RSS_distribution_for_each_size.png')
+    plt.savefig('ploted_figure/12_RSS_distribution_for_each_size.png')
     plt.show()
 
 
@@ -590,7 +596,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 8)
     plt.ylabel('RSSI(dBm)', fontsize = 8)
     
-    plt.savefig('image/13_1_RSSI_distribution_each_size_0_5.png')
+    plt.savefig('ploted_figure/13_1_RSSI_distribution_each_size_0_5.png')
     plt.show()
     
     # for network size 10 to 25
@@ -616,7 +622,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 8)
     plt.legend(['25'], fontsize = 7)
     
-    plt.savefig('image/13_2_RSSI_distribution_size_10_25.png')
+    plt.savefig('ploted_figure/13_2_RSSI_distribution_size_10_25.png')
     plt.show()
     
     # for network size 30 to 45
@@ -641,7 +647,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 8)
     plt.legend(['45'], fontsize = 7)
     
-    plt.savefig('image/13_3_RSSI_distribution_size_30_45.png')
+    plt.savefig('ploted_figure/13_3_RSSI_distribution_size_30_45.png')
     plt.show()
     
     # boxplot for each network size
@@ -651,7 +657,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         plt.xlabel('Motes', fontsize = 10)
         plt.ylabel('RSSI (dBm)', fontsize = 10)
     
-        plt.savefig('image/13_size{}_RSSI_dis_for_motes_size.png'.format(networksize))
+        plt.savefig('ploted_figure/13_size{}_RSSI_dis_for_motes_size.png'.format(networksize))
         plt.show()
 
 #14, Distribution of RSSI value for specific MAC address [OK]
@@ -663,7 +669,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/14_1_RSSI_dis_MAC.png')
+    plt.savefig('ploted_figure/14_1_RSSI_dis_MAC.png')
     plt.show()
     
     # plot distribution of RSSI values for manager
@@ -673,7 +679,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/14_2_RSSI_dis_manager.png')
+    plt.savefig('ploted_figure/14_2_RSSI_dis_manager.png')
     plt.show()
     
     # plot distribution of RSSI values of all motes that have more than 200 RSSI values
@@ -683,7 +689,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/14_3_RSSI_dis_more_200_values.png')
+    plt.savefig('ploted_figure/14_3_RSSI_dis_more_200_values.png')
     plt.show()
     
     # plot distribution of RSSI values of all motes that have more than 500 RSSI values
@@ -693,7 +699,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.xlabel('Motes', fontsize = 10)
     plt.ylabel('RSSI(dBm)', fontsize = 10)
     
-    plt.savefig('image/14_4_RSSI_dis_more_500_values.png')
+    plt.savefig('ploted_figure/14_4_RSSI_dis_more_500_values.png')
     plt.show()
 
 #15, Distribution of number of discovered neighbors for each packet send [OK]
@@ -705,7 +711,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.ylabel('Number of discovered neighbors (motes)', fontsize = 10)
     
     plt.xticks([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], ['0', '5', '10', '15', '20', '25', '30', '35', '40', '45'])
-    plt.savefig('image/15_discovered_number_dis_per_packet.png')
+    plt.savefig('ploted_figure/15_discovered_number_dis_per_packet.png')
     plt.show()
 
 # function will get all MAC address and mote IDs for each network size experiment
