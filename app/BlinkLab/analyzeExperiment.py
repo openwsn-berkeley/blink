@@ -55,7 +55,7 @@ def get_cmd_mgr_tag(cmd_msg, cmd_name):
     return list_cmd_msg
 
 # decode blink packet then return list neighbor, payload, number of packets send, number of motes and rssi value
-def proc_mgr_blink(networksize, discover_10, file_name): # OK
+def proc_mgr_blink(networksize, discover_10, file_name):
 
     list_neighbor = []
     list_netsize = []
@@ -106,7 +106,7 @@ def proc_mgr_blink(networksize, discover_10, file_name): # OK
 
     for mote_id in set_moteid:
         list_rssi = []
-        for i in list_neighbor: # ok
+        for i in list_neighbor:
             for j in i:
              # all mote ids that are heard by tag
                 if j[0] == mote_id:
@@ -116,7 +116,7 @@ def proc_mgr_blink(networksize, discover_10, file_name): # OK
     return list_payload, list_neighbor, list_num_packet, list_num_mote, dict_mac_rssi
 
 # decode blink data in manager and mapping rxTime and issueTime between Tag and Mgr
-def proc_tag_blink(networksize, file_name): # OK
+def proc_tag_blink(networksize, file_name):
 
     list_delta_time = []
 
@@ -146,7 +146,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
 
     dict_netsize_num_neighbor = {} # number of neighbors that heard by tag, dict {networksize: list_num_mote}
     dict_netsize_packet_no = {} # number of packets that are sent to discover 10 motes, dict {network size: list_num_packet}
-    
+
     dict_netsize_num_neighbor_10 = {} # number of neighbors that heard by tag, dict {networksize: list_num_mote}
     dict_netsize_packet_no_10 = {} # number of packets that are sent to discover 10 motes, dict {network size: list_num_packet}
 
@@ -175,8 +175,8 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         data, neighbor, list_num_packet, list_num_mote, dict_mac_rssi = proc_mgr_blink(netsize, False, file_name)
         data, neighbor, list_packet_no_10, list_len_mote_10, dict_mac_rssi = proc_mgr_blink(netsize, True, file_name)
 
-        dict_netsize_mac_rssi_tmp.update({netsize:dict_mac_rssi})
         list_max_discover_motes.append(max(list_num_mote))
+        dict_netsize_mac_rssi_tmp.update({netsize:dict_mac_rssi})
         dict_netsize_packet_no.update({netsize:list_num_packet})
         dict_netsize_num_neighbor.update({netsize:list_num_mote})
 
@@ -196,7 +196,6 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         dict_netsize_num_neighor_for_each_packet.update({netsize : num_neighbor})
 
         list_len_num_packet_discover_10_motes.append(len(dict_netsize_packet_no_10[netsize]))
-        
 
         # All MACs have RSSI value
         for mac_key in dict_netsize_mac_rssi_tmp[netsize]:
@@ -206,29 +205,23 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     for time_values in dict_netsize_trans_time.values():
         list_all_trans_time += time_values
 
-#==================NOK changing dict_all_mac_rssi
+#================== changing dict_all_mac_rssi
     dict_netsize_mac_rssi = copy.deepcopy(dict_netsize_mac_rssi_tmp)
 
-    print 'truoc: ', dict_netsize_mac_rssi
-    
     for netsize in range(begin_size, end_size, size_step):
         list_rssi_of_all_mac_for_each_size = []
         for mac in dict_netsize_mac_rssi_tmp[netsize]:
 
-            list_rssi_of_all_mac_for_each_size += dict_netsize_mac_rssi[netsize][mac] #OK
-            rssi_mac = dict_netsize_mac_rssi_tmp[netsize][mac]
+            list_rssi_of_all_mac_for_each_size += dict_netsize_mac_rssi[netsize][mac]
+            mac_rssi = dict_netsize_mac_rssi_tmp[netsize][mac]
 
             if mac in dict_all_mac_rssi:
-                dict_all_mac_rssi[mac].extend(rssi_mac) # poipoipoi dict_netsize_mac_rssi_tmp
+                dict_all_mac_rssi[mac].extend(mac_rssi) # poipoipoi dict_netsize_mac_rssi_tmp
 
             else:
-                dict_all_mac_rssi.update({mac:rssi_mac}) 
+                dict_all_mac_rssi.update({mac:mac_rssi}) 
 
-        dict_netsize_rssi.update({netsize:list_rssi_of_all_mac_for_each_size}) # OK
-
-    print('sau_all: '), dict_netsize_mac_rssi_tmp
-
-    print('new_spec_mac: '), dict_all_mac_rssi
+        dict_netsize_rssi.update({netsize:list_rssi_of_all_mac_for_each_size}) 
 
 #====================================== Print data ===========================
     #print'Maximum discovered motes: ', list_max_discover_motes
@@ -250,7 +243,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
 
 # list_num_mote -> dict_netsize_num_neighbor, list_max_discover_motes, 
 
-#1, Average transmission time to network size [OK]
+#1, Average transmission time to network size 
     plt.plot(list_network_size, list_average_delta_time, marker = '.')
     plt.suptitle('Average transmission time for each network size', fontsize = 12)
     plt.xlabel('Network size (motes)', fontsize = 10)
@@ -259,7 +252,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/1_aver_transmission_time.png')
     plt.show()
 
-#2, Average discovered neighbor of each packet send [OK]
+#2, Average discovered neighbor of each packet send 
     plt.plot(list_network_size, list_average_num_neighbor, marker = '.')
     plt.suptitle('Average number of motes of each packet send for each network size', fontsize = 12)
     plt.xlabel('Network size (motes)', fontsize = 10)
@@ -269,7 +262,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.show()
     
     
-#3, Average RSSI value to network size [OK]
+#3, Average RSSI value to network size 
     plt.plot(list_network_size, list_average_rssi_value, marker = '.')
     plt.suptitle('Average of RSSI value for each network size', fontsize = 12)
     plt.xlabel('Network size (motes)', fontsize = 10)
@@ -278,7 +271,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/3_average_rssi_value.png')
     plt.show()
     
-#4, Maximum number of motes that are discovered for each network size [OK] 
+#4, Maximum number of motes that are discovered for each network size  
     plt.plot(list_network_size, list_max_discover_motes, marker = '.')
     plt.suptitle('Maximum number of discovered motes for each network size', fontsize = 12)
     plt.xlabel('Network size (motes)', fontsize = 10)
@@ -287,7 +280,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/4_maximum_number_of_motes.png')
     plt.show()
     
-#5, Packets send to discover more than 10 motes for each network size [OK] 
+#5, Packets send to discover more than 10 motes for each network size  
     # plot figure for network size 10 to 45 motes, change 10 discovered motes affect figure 6, 5    
     plt.plot(dict_netsize_packet_no_10[10], dict_netsize_num_neighbor_10[10], marker = '.')
     plt.plot(dict_netsize_packet_no_10[15], dict_netsize_num_neighbor_10[15], marker = '.')
@@ -387,7 +380,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.suptitle('Number of discovered motes for each network size until 10 motes', fontsize = 10)
     plt.savefig('ploted_figure/5_4_number_of_packet_size10_1000.png')
     plt.show()
-#6, Maximum number of packets send to make sure tag can discover more than 10 motes for each network size [OK] 
+#6, Maximum number of packets send to make sure tag can discover more than 10 motes for each network size  
     # plot only for network size 10 to 45 motes, discovered 10 motes
     
     plt.plot(list_network_size[2:], list_len_num_packet_discover_10_motes[2:], marker = '.')
@@ -398,7 +391,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/6_number_of_packets_send_until_10_motes.png')
     plt.show()
     
-#7, Number of discovered motes and number of packets send for each network size [OK] - anh huong
+#7, Number of discovered motes and number of packets send for each network size 
     plt.plot(dict_netsize_packet_no[0], dict_netsize_num_neighbor[0], marker = '.')
     plt.plot(dict_netsize_packet_no[5], dict_netsize_num_neighbor[5], marker = '.')
     plt.plot(dict_netsize_packet_no[10], dict_netsize_num_neighbor[10], marker = '.')
@@ -422,7 +415,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     
     
     
-#8, Distribution of transmission time for whole experiment [OK]
+#8, Distribution of transmission time for whole experiment 
     # using kdeplot to present the distribution of transmisson time for whole network
     sns.kdeplot([b for x in dict_netsize_trans_time.values() for b in x], label = 'transmission time')
     plt.suptitle('Transmission time distribution for whole experiment')
@@ -444,7 +437,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/8_2_transmission_time_distribution.png')
     plt.show()
     
-#9, #Distribution of transmission time for each network size [OK]
+#9, #Distribution of transmission time for each network size 
     #== using KDE plot
     sns.kdeplot(dict_netsize_trans_time[0], label = '0')
     sns.kdeplot(dict_netsize_trans_time[5], label = '5')
@@ -487,7 +480,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/9_2_transmission_time_dsitribution.png')
     plt.show()
     
-#10, Distribution of transmission time for each network size (separately) [OK]
+#10, Distribution of transmission time for each network size (separately) 
     # using subplot for 2 or 4 diagram
     #=== for num_motes = 0 to 5
     plt.subplot(2,1,1)
@@ -571,7 +564,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         plt.savefig('ploted_figure/10_size{}_average_transmission_time.png'.format(netsize))
         plt.show()
     
-#11, Distribution of RSSI value for whole experiment [OK]
+#11, Distribution of RSSI value for whole experiment 
     plt.boxplot([i for x in dict_netsize_rssi.values() for i in x])
     plt.suptitle('Distribution of RSSI value of whole experiment', fontsize = 12)
     plt.xlabel('All value', fontsize = 10)
@@ -582,7 +575,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     
     
     
-#12, Distribution of RSSI value for each network size [OK]
+#12, Distribution of RSSI value for each network size 
     # plot all distribution of network size in one figure
     
     plt.boxplot([dict_netsize_rssi[netsize] for netsize in range(begin_size, end_size, size_step)])
@@ -596,7 +589,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.show()
     
 
-#13, Distribution of RSSI value for each network size (separately) [OK]
+#13, Distribution of RSSI value for each network size (separately) 
     # for network size 0, 5
     plt.subplot(2,1,1)
     plt.boxplot(dict_netsize_mac_rssi[0].values())
@@ -674,7 +667,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
         plt.savefig('ploted_figure/13_size{}_RSSI_dis_for_motes_size.png'.format(networksize))
         plt.show()
     
-#14, Distribution of RSSI value for specific MAC address [OK]
+#14, Distribution of RSSI value for specific MAC address 
     
     # plot distribution of RSSI value of all motes
     plt.boxplot([b for b in dict_all_mac_rssi.values()])
@@ -716,7 +709,7 @@ def plot_experiment(begin_size, end_size, size_step, file_name):
     plt.savefig('ploted_figure/14_4_RSSI_dis_more_500_values.png')
     plt.show()
     
-#15, Distribution of number of discovered neighbors for each packet send [OK]
+#15, Distribution of number of discovered neighbors for each packet send 
     
     plt.boxplot([dict_netsize_num_neighor_for_each_packet[netsize] for netsize in range(begin_size, end_size, size_step)])
     
