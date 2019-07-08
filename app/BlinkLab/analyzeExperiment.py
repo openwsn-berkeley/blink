@@ -51,7 +51,7 @@ def proc_mgr_blink_mote(file_name):
     set_diff_mote = set()
     list_average_num_mote_45 = []
     list_average_num_mote_all = []
-    
+
     #=========================== clearing and processing data================
     list_notif_blink_mgr = get_blink_notif_mgr(get_msg_type(file_name,'NOTIF'))
     for msg in list_notif_blink_mgr:
@@ -121,6 +121,83 @@ def proc_mgr_blink_mote(file_name):
         plt.plot(range(1, 11), dict_netsize_averge_num_mote[netsize], marker = 'o')
         plt.savefig('experiment_figure/16_{0}_dist_discover_motes.png'.format(netsize))
         plt.show()
+
+    #3, plot for all 4 subplot network size 5, 15, 25, 35, 45 and network size 10, 20, 30, 40
+    # for network size 0, 5
+    plt.suptitle('Distribution of discovered motes for each network size', fontsize = 10)
+    plt.subplot(2,1,1)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[0][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[0], marker = 'o')
+    plt.legend(['0 motes'], fontsize = 7, loc = 'lower right')
+
+    plt.subplot(2,1,2)
+    plt.xlabel('Packets send', fontsize = 8)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[5][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[5], marker = 'o')
+    plt.legend(['5 motes'], fontsize = 7, loc = 'lower right')
+
+    plt.savefig('experiment_figure/17_1_dist_discover_motes_size_0_5.png')
+    plt.show()
+    
+    # for network size 15 to 45
+    plt.suptitle('Distribution of discovered motes for each network size', fontsize = 10)
+    plt.subplot(2,2,1)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[15][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[15], marker = 'o')
+    plt.legend(['15 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,2)
+    plt.boxplot([dict_netsize_packet_diff_mote[25][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[25], marker = 'o')
+    plt.legend(['25 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,3)
+    plt.xlabel('Packets send', fontsize = 8)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[35][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[35], marker = 'o')
+    plt.legend(['35 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,4)
+    plt.xlabel('Packets send', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[45][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[45], marker = 'o')
+    plt.legend(['45 motes'], fontsize = 7)
+    
+    plt.savefig('experiment_figure/17_2_dist_discover_motes_size_15_45.png')
+    plt.show()
+    
+    # for network size 10 to 40
+    plt.suptitle('Distribution of discovered motes for each network size', fontsize = 10)
+    plt.subplot(2,2,1)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[10][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[10], marker = 'o')
+    plt.legend(['10 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,2)
+    plt.boxplot([dict_netsize_packet_diff_mote[20][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[20], marker = 'o')
+    plt.legend(['20 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,3)
+    plt.xlabel('Packets send', fontsize = 8)
+    plt.ylabel('Discovered motes', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[30][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[30], marker = 'o')
+    plt.legend(['30 motes'], fontsize = 7)
+    
+    plt.subplot(2,2,4)
+    plt.xlabel('Packets send', fontsize = 8)
+    plt.boxplot([dict_netsize_packet_diff_mote[40][packetid] for packetid in range(10)])
+    plt.plot(range(1, 11), dict_netsize_averge_num_mote[40], marker = 'o')
+    plt.legend(['40 motes'], fontsize = 7)
+    
+    plt.savefig('experiment_figure/17_3_dist_discover_motes_size_10_40.png')
+    plt.show()
 
 #============================ main ============================================
 def main():
