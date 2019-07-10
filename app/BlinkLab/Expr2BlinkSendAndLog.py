@@ -8,12 +8,9 @@ the mote queue and is in the network. Calling this with -p X will send X packets
 one after the other, waiting for txDone between each one.
 
 Command line options include
-   -c | --com to specify the COM port
-   -n | --neighbors to send the packet with or without the discovered neighbors
-   -p | --packets to specify how many packets to send
-   -l | --location of Blink mote to send blink packet 
-   -h | --help 
-   Example:   BlinkPacketSend.py -c COM11 -n 0 -p 2 -l Lab-room
+   -r | --location of Blink mote to send blink packet 
+
+   Example:   BlinkPacketSend.py -r A120
 ''' 
 #============================ adjust path =====================================
 
@@ -79,8 +76,9 @@ class NotifListener(threading.Thread):
 
 def mynotifIndication(my_notif):
     # Check for txDone notification, then print status information
-    print_and_log('NOTIF', {'txMsg': my_notif, 'payload': data})
-    NotifEventDone.set()
+    if my_notif[0] == ["txDone"]:
+        print_and_log('NOTIF', {'txMsg': my_notif, 'payload': data})
+        NotifEventDone.set()
 
 def mydisconnectedIndication():
     print 'Mote was disconnected\n'
@@ -149,6 +147,7 @@ try:
         while not NotifEventDone.is_set():
             time.sleep(1)
         NotifEventDone.clear()
+
     # reset tag after each experiment
     time.sleep(3)
     moteconnector.dn_reset()
