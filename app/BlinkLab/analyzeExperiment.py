@@ -39,7 +39,7 @@ def get_blink_notif_mgr(notif_msg):
             list_blink_msg.append(a_msg)
     return list_blink_msg
 
-def proc_mgr_blink_mote(file_name):
+def proc_expr1_mgr_data(file_name):
 
     dict_netsize_tranid_packetid = {net:{trans: [] for trans in range(20)} for net in range(0,46,5)}
     dict_netsize_tranid_num_mote = {net:{trans: [] for trans in range(20)} for net in range(0,46,5)}
@@ -199,10 +199,88 @@ def proc_mgr_blink_mote(file_name):
     plt.savefig('experiment_figure/17_3_dist_discover_motes_size_10_40.png')
     plt.show()
 
+def proc_expr1_sync_time(file_name):
+    LIST_NETSIZE = range(11, 38) # depend on the network size and for testing, we use range(11,38), real experiment, we use range(0, 46,5)
+
+    dict_hash_payload = {} # {hash: data}
+    dict_hash_dn_blink = {} # {hash: time_dn_blink}
+    dict_hash_tx_done = {} # {hash:time_tx_done}
+
+    dict_hash_synctime = {} # {hash:synctime}
+    dict_netsize_hash_synctime = {} # {netsize1:{hash1: time1, hash2:time2}, netsize2:{hash3: time3, hash4: time4}}
+    dict_netsize_synctime = {} # {netsize1:[time1, time2, time3]}
+
+    #=========================== clearing and processing data================
+    for txdone in get_msg_type(file_name, 'NOTIF'):
+        if txdone['msg']['txMsg'][1]['status'] == 0:
+            dict_hash_tx_done.update({hash(tuple(txdone['msg']['payload'])): txdone['timestamp']})
+        else:
+            print 'Packet is sent failed:', txdone['msg']['payload']
+
+    for dn_blink in get_msg_type(file_name, 'CMD'):
+        dict_hash_dn_blink.update({hash(tuple(dn_blink['msg']['params']['payload'])): dn_blink['timestamp']})
+        dict_hash_payload.update({hash(tuple(dn_blink['msg']['params']['payload'])): dn_blink['msg']['params']['payload']})
+
+    for payload_hash in dict_hash_tx_done:
+        dict_hash_synctime.update({payload_hash : dict_hash_tx_done[payload_hash] - dict_hash_dn_blink[payload_hash]})
+
+    for payload in dict_hash_payload:
+        dict_netsize_hash_synctime.update({dict_hash_payload[payload][0]:{}})
+        dict_netsize_synctime.update({dict_hash_payload[payload][0]:[]})
+    
+    # get data for dict_netsize_hash_synctime
+
+    for netsize in dict_netsize_hash_synctime:
+        for h in dict_hash_synctime:
+            if netsize == dict_hash_payload[h][0]:
+                dict_netsize_hash_synctime[netsize].update({h:dict_hash_synctime[h]})
+
+    # get data for dict_netsize_hash_synctime
+    for netsize in dict_netsize_synctime:
+        dict_netsize_synctime.update({netsize : dict_netsize_hash_synctime[netsize].values()})
+    
+    
+    #=========================== print information ================
+    for payload in dict_hash_synctime:
+        if dict_hash_synctime[payload] > 6:
+            print 'synctime is greater 6s:',  dict_hash_payload[payload], 'synctime is:', dict_hash_synctime[payload]
+
+    #print 'dict_netsize_hash_synctime', dict_netsize_hash_synctime
+    print 'dict_netsize_synctime', dict_netsize_synctime
+
+    #=========================== visualizing data================
+    print 'wait for plotting ...'
+    current_dir = os.getcwd()
+    new_dir = current_dir + '\experiment_figure'
+    if not os.path.exists(new_dir):
+        os.makedirs(new_dir)
+
+    #1, all sync times for all packets
+    plt.suptitle('Synctime for all network sizes', fontsize = 12)
+    plt.ylabel('Time values(s)', fontsize = 12)
+    plt.xlabel('Packet ID', fontsize = 12)
+
+    plt.plot([i for i in dict_hash_synctime.values()])
+    plt.savefig('experiment_figure/exp1_synctime_netsize.png')
+    plt.show()
+    
+    #2, average sync times for each network size
+    plt.suptitle('Average synctime for all network sizes', fontsize = 12)
+    labels = [i for i in dict_netsize_hash_synctime]
+    plt.ylabel('Time values(s)', fontsize = 12)
+    plt.xlabel('Network size', fontsize = 12)
+
+    plt.plot([sta.mean(dict_netsize_synctime[netsize]) for netsize in labels])
+    plt.xticks(range(len(labels)), labels)
+    plt.savefig('experiment_figure/exp1_synctime_netsize.png')
+    plt.show()
+    
+
 #============================ main ============================================
 def main():
-    proc_mgr_blink_mote('blinkLab_final.txt')
-    raw_input('Press enter to finish')
+    #proc_expr1_mgr_data('blinkLab_final.txt')
+    proc_expr1_sync_time('expr2_blink_log_sample.txt')
+    raw_input('\n\nPress enter to finish! \n\n')
 if __name__=="__main__":
     main()
 
